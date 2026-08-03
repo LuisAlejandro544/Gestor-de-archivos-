@@ -82,6 +82,16 @@ class FileRepository(private val context: Context) {
             }
         } else null
 
+        val isEncrypted = if (!isDir && (extension == "zip" || fileType == FileType.ARCHIVE)) {
+            try {
+                if (extension == "zip" || extension == "apk" || extension == "jar") {
+                    net.lingala.zip4j.ZipFile(file).isEncrypted
+                } else false
+            } catch (e: Exception) {
+                false
+            }
+        } else false
+
         return FileItem(
             name = name,
             path = file.absolutePath,
@@ -93,7 +103,8 @@ class FileRepository(private val context: Context) {
             fileType = fileType,
             isHidden = name.startsWith("."),
             canRead = file.canRead(),
-            canWrite = file.canWrite()
+            canWrite = file.canWrite(),
+            isEncrypted = isEncrypted
         )
     }
 
@@ -137,6 +148,70 @@ class FileRepository(private val context: Context) {
             if (!newDir.exists()) {
                 newDir.mkdirs()
             } else false
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    suspend fun createNewFile(parentPath: String, fileName: String, initialContent: String = ""): Boolean = withContext(Dispatchers.IO) {
+        try {
+            val parent = File(parentPath)
+            if (!parent.exists()) parent.mkdirs()
+            val newFile = File(parent, fileName)
+            if (!newFile.exists()) {
+                val created = newFile.createNewFile()
+                if (created && initialContent.isNotEmpty()) {
+                    newFile.writeText(initialContent, Charsets.UTF_8)
+                }
+                created
+            } else false
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    suspend fun moveItems(sourcePaths: List<String>, destinationFolderPath: String): Boolean = withContext(Dispatchers.IO) {
+        try {
+            val destFolder = File(destinationFolderPath)
+            if (!destFolder.exists()) destFolder.mkdirs()
+            for (srcPath in sourcePaths) {
+                val srcFile = File(srcPath)
+                if (srcFile.exists()) {
+                    val destFile = File(destFolder, srcFile.name)
+                    val moved = srcFile.renameTo(destFile)
+                    if (!moved) {
+                        if (srcFile.isDirectory) {
+                            srcFile.copyRecursively(destFile, overwrite = true)
+                            srcFile.deleteRecursively()
+                        } else {
+                            srcFile.copyTo(destFile, overwrite = true)
+                            srcFile.delete()
+                        }
+                    }
+                }
+            }
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    suspend fun copyItems(sourcePaths: List<String>, destinationFolderPath: String): Boolean = withContext(Dispatchers.IO) {
+        try {
+            val destFolder = File(destinationFolderPath)
+            if (!destFolder.exists()) destFolder.mkdirs()
+            for (srcPath in sourcePaths) {
+                val srcFile = File(srcPath)
+                if (srcFile.exists()) {
+                    val destFile = File(destFolder, srcFile.name)
+                    if (srcFile.isDirectory) {
+                        srcFile.copyRecursively(destFile, overwrite = true)
+                    } else {
+                        srcFile.copyTo(destFile, overwrite = true)
+                    }
+                }
+            }
+            true
         } catch (e: Exception) {
             false
         }

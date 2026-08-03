@@ -63,22 +63,59 @@ fun FileManagerScreen(
                 onSetSortType = { viewModel.setSortType(it) },
                 showHiddenFiles = uiState.showHiddenFiles,
                 onToggleShowHiddenFiles = { viewModel.toggleShowHiddenFiles() },
-                onOpenSettings = { viewModel.setShowSettingsSheet(true) }
+                onOpenSettings = { viewModel.setShowSettingsSheet(true) },
+                isMultiSelectMode = uiState.isMultiSelectMode,
+                selectedCount = uiState.selectedPaths.size,
+                onClearSelection = { viewModel.clearSelection() },
+                onSelectAll = { viewModel.selectAllItems() },
+                onBatchMove = { viewModel.openFolderPicker(FolderPickerAction.MOVE) },
+                onBatchCopy = { viewModel.openFolderPicker(FolderPickerAction.COPY) },
+                onBatchDelete = { viewModel.executeBatchDelete() }
             )
         },
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = { viewModel.setShowCreateFolderDialog(true) },
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary,
-                shape = CircleShape,
-                modifier = Modifier.testTag("fab_create_folder")
-            ) {
-                Icon(
-                    imageVector = Icons.Default.CreateNewFolder,
-                    contentDescription = "Nueva carpeta",
-                    modifier = Modifier.size(24.dp)
-                )
+            var showFabMenu by remember { mutableStateOf(false) }
+
+            Box {
+                FloatingActionButton(
+                    onClick = { showFabMenu = !showFabMenu },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                    shape = CircleShape,
+                    modifier = Modifier.testTag("fab_create_menu")
+                ) {
+                    Icon(
+                        imageVector = if (showFabMenu) Icons.Default.Close else Icons.Default.Add,
+                        contentDescription = "Crear nuevo...",
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
+
+                DropdownMenu(
+                    expanded = showFabMenu,
+                    onDismissRequest = { showFabMenu = false }
+                ) {
+                    DropdownMenuItem(
+                        text = { Text("Nueva Carpeta", fontWeight = FontWeight.SemiBold) },
+                        onClick = {
+                            showFabMenu = false
+                            viewModel.setShowCreateFolderDialog(true)
+                        },
+                        leadingIcon = {
+                            Icon(Icons.Default.CreateNewFolder, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                        }
+                    )
+                    DropdownMenuItem(
+                        text = { Text("Nuevo Archivo (.txt, .json, .md...)", fontWeight = FontWeight.SemiBold) },
+                        onClick = {
+                            showFabMenu = false
+                            viewModel.setShowCreateFileDialog(true)
+                        },
+                        leadingIcon = {
+                            Icon(Icons.Default.PostAdd, contentDescription = null, tint = MaterialTheme.colorScheme.secondary)
+                        }
+                    )
+                }
             }
         }
     ) { innerPadding ->
@@ -161,13 +198,19 @@ fun FileManagerScreen(
                     FileManagerEmptyState()
                 } else {
                     val onItemClick: (FileItem) -> Unit = { item ->
-                        if (item.isDirectory) {
+                        if (uiState.isMultiSelectMode) {
+                            viewModel.toggleSelectPath(item.path)
+                        } else if (item.isDirectory) {
                             viewModel.navigateTo(item.path)
                         } else if (item.fileType == com.example.data.FileType.ARCHIVE || item.extension.lowercase() in listOf("zip", "7z", "tar", "gz", "tgz", "apk", "jar", "rar")) {
-                            viewModel.openZipExplorer(item)
+                            if (item.isEncrypted) {
+                                viewModel.openPasswordPromptForArchive(item, ArchivePasswordAction.VIEW)
+                            } else {
+                                viewModel.openZipExplorer(item)
+                            }
                         } else if (item.extension.lowercase() in listOf("pem", "key", "crt", "cer", "pub", "p8", "keytool")) {
                             viewModel.openPemViewer(item)
-                        } else if (item.extension.lowercase() in listOf("txt", "md")) {
+                        } else if (item.extension.lowercase() in listOf("txt", "md", "json", "xml", "kt", "java", "py", "sh", "html", "css", "js", "ts", "cpp", "c", "sql")) {
                             viewModel.openTextFileWithExtension(item)
                         } else {
                             viewModel.selectItemForAction(item)
@@ -175,7 +218,11 @@ fun FileManagerScreen(
                     }
 
                     val onItemOptionsClick: (FileItem) -> Unit = { item ->
-                        viewModel.selectItemForAction(item)
+                        if (uiState.isMultiSelectMode) {
+                            viewModel.toggleSelectPath(item.path)
+                        } else {
+                            viewModel.selectItemForAction(item)
+                        }
                     }
 
                     if (uiState.viewMode == ViewMode.LIST) {
@@ -187,7 +234,10 @@ fun FileManagerScreen(
                                 FileItemRow(
                                     item = item,
                                     onClick = { onItemClick(item) },
-                                    onOptionClick = { onItemOptionsClick(item) }
+                                    onOptionClick = { onItemOptionsClick(item) },
+                                    isMultiSelectMode = uiState.isMultiSelectMode,
+                                    isSelected = uiState.selectedPaths.contains(item.path),
+                                    onToggleSelect = { viewModel.toggleSelectPath(item.path) }
                                 )
                             }
                         }
@@ -203,7 +253,10 @@ fun FileManagerScreen(
                                 FileItemCard(
                                     item = item,
                                     onClick = { onItemClick(item) },
-                                    onOptionClick = { onItemOptionsClick(item) }
+                                    onOptionClick = { onItemOptionsClick(item) },
+                                    isMultiSelectMode = uiState.isMultiSelectMode,
+                                    isSelected = uiState.selectedPaths.contains(item.path),
+                                    onToggleSelect = { viewModel.toggleSelectPath(item.path) }
                                 )
                             }
                         }
@@ -340,6 +393,46 @@ fun FileManagerScreen(
         ArchivoXTextViewerDialog(
             item = uiState.selectedTextItem!!,
             onDismiss = { viewModel.closeTextViewer() }
+        )
+    }
+
+    // Create File Dialog
+    if (uiState.showCreateFileDialog) {
+        CreateFileDialog(
+            onDismiss = { viewModel.setShowCreateFileDialog(false) },
+            onCreate = { fileName, initialContent ->
+                viewModel.createNewFile(fileName, initialContent)
+            }
+        )
+    }
+
+    // Folder Picker Dialog (For Move and Copy)
+    if (uiState.showFolderPickerDialog) {
+        FolderPickerDialog(
+            rootPath = uiState.rootPath,
+            currentPath = uiState.currentPath,
+            action = uiState.folderPickerAction,
+            itemCount = uiState.selectedPaths.size,
+            onDismiss = { viewModel.closeFolderPicker() },
+            onConfirmLocation = { destinationPath ->
+                if (uiState.folderPickerAction == FolderPickerAction.MOVE) {
+                    viewModel.executeBatchMove(destinationPath)
+                } else {
+                    viewModel.executeBatchCopy(destinationPath)
+                }
+            }
+        )
+    }
+
+    // Archive Password Prompt Dialog
+    if (uiState.showPasswordPromptDialog && uiState.passwordPromptItem != null) {
+        ArchivePasswordDialog(
+            archiveName = uiState.passwordPromptItem!!.name,
+            action = uiState.passwordPromptAction,
+            onDismiss = { viewModel.closePasswordPrompt() },
+            onSubmitPassword = { password ->
+                viewModel.submitArchivePassword(password)
+            }
         )
     }
 }

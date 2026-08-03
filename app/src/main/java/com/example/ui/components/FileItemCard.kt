@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -32,7 +32,10 @@ fun FileItemCard(
     item: FileItem,
     onClick: () -> Unit,
     onOptionClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isMultiSelectMode: Boolean = false,
+    isSelected: Boolean = false,
+    onToggleSelect: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val iconInfo = getFileIconAndColor(item.fileType, item.isDirectory, item.extension)
@@ -50,12 +53,16 @@ fun FileItemCard(
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
             .combinedClickable(
-                onClick = onClick,
-                onLongClick = onOptionClick
+                onClick = {
+                    if (isMultiSelectMode) onToggleSelect() else onClick()
+                },
+                onLongClick = {
+                    if (!isMultiSelectMode) onOptionClick() else onToggleSelect()
+                }
             )
             .testTag("file_card_${item.name}"),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f) else MaterialTheme.colorScheme.surface
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
@@ -67,8 +74,19 @@ fun FileItemCard(
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
+                if (isMultiSelectMode) {
+                    Checkbox(
+                        checked = isSelected,
+                        onCheckedChange = { onToggleSelect() },
+                        modifier = Modifier.size(24.dp)
+                    )
+                } else {
+                    Spacer(modifier = Modifier.width(1.dp))
+                }
+
                 IconButton(
                     onClick = onOptionClick,
                     modifier = Modifier.size(28.dp)
@@ -125,6 +143,16 @@ fun FileItemCard(
                     textAlign = TextAlign.Center,
                     modifier = Modifier.weight(1f, fill = false)
                 )
+
+                if (item.isEncrypted) {
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Icon(
+                        imageVector = Icons.Default.Lock,
+                        contentDescription = "Archivo encriptado",
+                        tint = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.size(14.dp)
+                    )
+                }
 
                 if (badgeColor != null) {
                     Spacer(modifier = Modifier.width(4.dp))

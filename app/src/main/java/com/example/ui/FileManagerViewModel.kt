@@ -12,6 +12,9 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+enum class FolderPickerAction { MOVE, COPY }
+enum class ArchivePasswordAction { VIEW, EXTRACT }
+
 data class FileManagerUiState(
     val rootPath: String = "",
     val currentPath: String = "",
@@ -27,6 +30,7 @@ data class FileManagerUiState(
     val isLoading: Boolean = false,
     val selectedItem: FileItem? = null,
     val showCreateFolderDialog: Boolean = false,
+    val showCreateFileDialog: Boolean = false,
     val showRenameDialog: Boolean = false,
     val showDeleteDialog: Boolean = false,
     val showCompressDialog: Boolean = false,
@@ -47,7 +51,16 @@ data class FileManagerUiState(
     val selectedTextItem: FileItem? = null,
     val showZipExplorerDialog: Boolean = false,
     val selectedZipItem: FileItem? = null,
-    val userMessage: String? = null
+    val userMessage: String? = null,
+    // Multi-selection state
+    val isMultiSelectMode: Boolean = false,
+    val selectedPaths: Set<String> = emptySet(),
+    val showFolderPickerDialog: Boolean = false,
+    val folderPickerAction: FolderPickerAction = FolderPickerAction.MOVE,
+    // Password Prompt State
+    val showPasswordPromptDialog: Boolean = false,
+    val passwordPromptItem: FileItem? = null,
+    val passwordPromptAction: ArchivePasswordAction = ArchivePasswordAction.VIEW
 )
 
 class FileManagerViewModel(application: Application) : AndroidViewModel(application) {
@@ -265,6 +278,174 @@ class FileManagerViewModel(application: Application) : AndroidViewModel(applicat
 
     fun cancelTextExtensionInstall() {
         _uiState.update { it.copy(showTextExtensionInstallDialog = false) }
+    }
+
+    fun setShowCreateFileDialog(show: Boolean) {
+        _uiState.update { it.copy(showCreateFileDialog = show) }
+    }
+
+    fun createNewFile(fileName: String, initialContent: String = "") {
+        viewModelScope.launch {
+            val current = _uiState.value.currentPath
+            val trimmedName = fileName.trim()
+            if (trimmedName.isEmpty()) return@launch
+            val success = repository.createNewFile(current, trimmedName, initialContent)
+            if (success) {
+                showMessage("Archivo '$trimmedName' creado correctamente")
+                setShowCreateFileDialog(false)
+                loadDirectory(current)
+                val createdFile = java.io.File(current, trimmedName)
+                val ext = createdFile.extension.lowercase()
+                if (ext in listOf("txt", "md", "json", "xml", "kt", "java", "py", "sh", "html", "css", "js", "ts", "cpp", "c", "sql")) {
+                    val fileItem = FileItem(
+                        name = trimmedName,
+                        path = createdFile.absolutePath,
+                        isDirectory = false,
+                        sizeBytes = createdFile.length(),
+                        lastModified = createdFile.lastModified(),
+                        extension = ext,
+                        fileType = when (ext) {
+                            "json" -> FileType.JSON
+                            "txt", "md" -> FileType.DOCUMENT
+                            else -> FileType.CODE
+                        }
+                    )
+                    openTextFileWithExtension(fileItem)
+                }
+            } else {
+                showMessage("Error: ya existe un archivo con ese nombre o no se pudo crear")
+            }
+        }
+    }
+
+    fun toggleMultiSelectMode(enabled: Boolean? = null) {
+        _uiState.update { state ->
+            val next = enabled ?: !state.isMultiSelectMode
+            state.copy(
+                isMultiSelectMode = next,
+                selectedPaths = if (!next) emptySet() else state.selectedPaths
+            )
+        }
+    }
+
+    fun toggleSelectPath(path: String) {
+        _uiState.update { state ->
+            val set = state.selectedPaths.toMutableSet()
+            if (set.contains(path)) set.remove(path) else set.add(path)
+            state.copy(
+                selectedPaths = set,
+                isMultiSelectMode = true
+            )
+        }
+    }
+
+    fun selectAllItems() {
+        _uiState.update { state ->
+            val allPaths = state.items.map { it.path }.toSet()
+            state.copy(selectedPaths = allPaths, isMultiSelectMode = true)
+        }
+    }
+
+    fun clearSelection() {
+        _uiState.update { state ->
+            state.copy(selectedPaths = emptySet(), isMultiSelectMode = false)
+        }
+    }
+
+    fun openFolderPicker(action: FolderPickerAction) {
+        _uiState.update { state ->
+            state.copy(showFolderPickerDialog = true, folderPickerAction = action)
+        }
+    }
+
+    fun closeFolderPicker() {
+        _uiState.update { state ->
+            state.copy(showFolderPickerDialog = false)
+        }
+    }
+
+    fun executeBatchMove(destinationPath: String) {
+        val selected = _uiState.value.selectedPaths.toList()
+        if (selected.isEmpty()) return
+        viewModelScope.launch {
+            closeFolderPicker()
+            _uiState.update { it.copy(isLoading = true) }
+            val success = repository.moveItems(selected, destinationPath)
+            if (success) {
+                showMessage("${selected.size} elemento(s) movido(s) con éxito")
+                clearSelection()
+                loadDirectory(_uiState.value.currentPath)
+                loadStorageInfo()
+            } else {
+                showMessage("Error al mover algunos elementos")
+            }
+        }
+    }
+
+    fun executeBatchCopy(destinationPath: String) {
+        val selected = _uiState.value.selectedPaths.toList()
+        if (selected.isEmpty()) return
+        viewModelScope.launch {
+            closeFolderPicker()
+            _uiState.update { it.copy(isLoading = true) }
+            val success = repository.copyItems(selected, destinationPath)
+            if (success) {
+                showMessage("${selected.size} elemento(s) copiado(s) con éxito")
+                clearSelection()
+                loadDirectory(_uiState.value.currentPath)
+                loadStorageInfo()
+            } else {
+                showMessage("Error al copiar algunos elementos")
+            }
+        }
+    }
+
+    fun executeBatchDelete() {
+        val selected = _uiState.value.selectedPaths.toList()
+        if (selected.isEmpty()) return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+            var deletedCount = 0
+            for (path in selected) {
+                if (repository.deleteFileOrDirectory(path)) deletedCount++
+            }
+            showMessage("Se eliminaron $deletedCount elemento(s)")
+            clearSelection()
+            loadDirectory(_uiState.value.currentPath)
+            loadStorageInfo()
+        }
+    }
+
+    fun openPasswordPromptForArchive(item: FileItem, action: ArchivePasswordAction) {
+        _uiState.update {
+            it.copy(
+                showPasswordPromptDialog = true,
+                passwordPromptItem = item,
+                passwordPromptAction = action
+            )
+        }
+    }
+
+    fun closePasswordPrompt() {
+        _uiState.update {
+            it.copy(
+                showPasswordPromptDialog = false,
+                passwordPromptItem = null
+            )
+        }
+    }
+
+    fun submitArchivePassword(password: String) {
+        val item = _uiState.value.passwordPromptItem ?: return
+        val action = _uiState.value.passwordPromptAction
+        closePasswordPrompt()
+
+        if (action == ArchivePasswordAction.VIEW) {
+            _uiState.update { it.copy(selectedZipItem = item, showZipExplorerDialog = true) }
+        } else if (action == ArchivePasswordAction.EXTRACT) {
+            _uiState.update { it.copy(selectedItem = item) }
+            extractSelectedItem(assignedCores = Runtime.getRuntime().availableProcessors(), password = password)
+        }
     }
 
     fun createFolder(name: String) {

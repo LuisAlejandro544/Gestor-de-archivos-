@@ -32,7 +32,10 @@ fun FileItemRow(
     item: FileItem,
     onClick: () -> Unit,
     onOptionClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isMultiSelectMode: Boolean = false,
+    isSelected: Boolean = false,
+    onToggleSelect: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val apkIcon = if (item.fileType == FileType.APK) rememberApkIcon(context, item.path) else null
@@ -42,11 +45,15 @@ fun FileItemRow(
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
             .combinedClickable(
-                onClick = onClick,
-                onLongClick = onOptionClick
+                onClick = {
+                    if (isMultiSelectMode) onToggleSelect() else onClick()
+                },
+                onLongClick = {
+                    if (!isMultiSelectMode) onOptionClick() else onToggleSelect()
+                }
             )
             .testTag("file_row_${item.name}"),
-        color = Color.Transparent
+        color = if (isSelected) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f) else Color.Transparent
     ) {
         Row(
             modifier = Modifier
@@ -54,6 +61,14 @@ fun FileItemRow(
                 .padding(horizontal = 12.dp, vertical = 7.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            if (isMultiSelectMode) {
+                Checkbox(
+                    checked = isSelected,
+                    onCheckedChange = { onToggleSelect() },
+                    modifier = Modifier.padding(end = 8.dp)
+                )
+            }
+
             // Colored File / Folder Icon Badge or real APK logo
             val iconInfo = getFileIconAndColor(item.fileType, item.isDirectory, item.extension)
             val extLower = item.extension.lowercase()
@@ -107,6 +122,16 @@ fun FileItemRow(
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f, fill = false)
                     )
+
+                    if (item.isEncrypted) {
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Icon(
+                            imageVector = Icons.Default.Lock,
+                            contentDescription = "Archivo encriptado con contraseña",
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.size(15.dp)
+                        )
+                    }
 
                     if (badgeColor != null) {
                         Spacer(modifier = Modifier.width(6.dp))

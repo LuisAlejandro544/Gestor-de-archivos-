@@ -68,7 +68,8 @@ data class FileItem(
     val fileType: FileType = FileType.UNKNOWN,
     val isHidden: Boolean = false,
     val canRead: Boolean = true,
-    val canWrite: Boolean = true
+    val canWrite: Boolean = true,
+    val isEncrypted: Boolean = false
 ) {
     val formattedSize: String
         get() {

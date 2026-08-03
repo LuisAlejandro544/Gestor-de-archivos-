@@ -33,7 +33,7 @@ Este documento describe la organización jerárquica de archivos y carpetas del 
 │           │   │   │   ├── CompressFileDialog.kt  # Diálogo de compresión con opciones de formato, nivel y clave AES-256
 │           │   │   │   ├── CompressionProgressDialog.kt # Diálogo modal con consola de logs de compresión en tiempo real
 │           │   │   │   ├── ExtractArchiveDialog.kt # Diálogo de extracción de archivos comprimidos
-│           │   │   │   ├── FileActionDialogs.kt   # Hoja de acciones (Renombrar, Eliminar, Detalle)
+│           │   │   │   ├── FileActionDialogs.kt   # Hoja de acciones (Renombrar, Eliminar, Detalle, Crear Archivo, Selector de Carpeta, Clave ZIP)
 │           │   │   │   ├── FileManagerEmptyState.kt # Componente visual de estado de carpeta vacía
 │           │   │   │   ├── FileManagerTopBar.kt   # Barra superior con búsqueda, ordenación y cambio de vista
 │           │   │   │   ├── FileItemCard.kt        # Vista en Cuadrícula (Grid Card)
