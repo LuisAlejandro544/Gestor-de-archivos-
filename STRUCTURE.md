@@ -26,15 +26,21 @@ Este documento describe la organización jerárquica de archivos y carpetas del 
 │           │   │   ├── FileManagerViewModel.kt # ViewModel principal y UI State
 │           │   │   ├── FileManagerScreen.kt    # Composable raíz de la interfaz ArchivoX
 │           │   │   ├── components/
-│           │   │   │   ├── ArchivoXTextViewerDialog.kt # Extensión ArchivoX Text (Instalador & Visor TXT/MD)
+│           │   │   │   ├── ArchivoXTextViewerDialog.kt # Diálogo visor de archivos TXT y MD (Extensión ArchivoX Text)
 │           │   │   │   ├── BreadcrumbBar.kt       # Navegación por rutas de archivos
-│           │   │   │   ├── CompressionDialogs.kt  # Diálogos de compresión AES-256, extracción y progreso
-│           │   │   │   ├── FileActionDialogs.kt   # Hoja de acciones (Renombrar, Eliminar, Detalle, Pem)
+│           │   │   │   ├── CompressFileDialog.kt  # Diálogo de compresión con opciones de formato, nivel y clave AES-256
+│           │   │   │   ├── CompressionProgressDialog.kt # Diálogo modal con consola de logs de compresión en tiempo real
+│           │   │   │   ├── ExtractArchiveDialog.kt # Diálogo de extracción de archivos comprimidos
+│           │   │   │   ├── FileActionDialogs.kt   # Hoja de acciones (Renombrar, Eliminar, Detalle)
+│           │   │   │   ├── FileManagerEmptyState.kt # Componente visual de estado de carpeta vacía
+│           │   │   │   ├── FileManagerTopBar.kt   # Barra superior con búsqueda, ordenación y cambio de vista
 │           │   │   │   ├── FileItemCard.kt        # Vista en Cuadrícula (Grid Card)
 │           │   │   │   ├── FileItemRow.kt         # Vista en Lista
 │           │   │   │   ├── PemViewerDialog.kt     # Visor Nativo de Claves y Certificados PEM
 │           │   │   │   ├── SettingsSheet.kt       # Hoja de configuración de temas y paletas
-│           │   │   │   └── StorageHeader.kt       # Card de espacio de almacenamiento y filtros
+│           │   │   │   ├── StorageHeader.kt       # Card de espacio de almacenamiento y filtros
+│           │   │   │   ├── TextExtensionInstallDialog.kt # Diálogo modal de instalación del módulo de extensión ArchivoX Text
+│           │   │   │   └── TextRenderers.kt       # Renderizadores de texto plano con numeración de líneas y Markdown
 │           │   │   └── theme/
 │           │   │       ├── Color.kt               # Paletas Verde Esmeralda, AMOLED y Light
 │           │   │       ├── Theme.kt               # Composable de tema dinámico M3

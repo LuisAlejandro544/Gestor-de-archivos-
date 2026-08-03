@@ -114,6 +114,8 @@ dependencies {
   // implementation(libs.play.services.location)
   implementation(libs.retrofit)
   implementation(libs.zip4j)
+  implementation(libs.commons.compress)
+  implementation(libs.tukaani.xz)
   testImplementation(libs.androidx.compose.ui.test.junit4)
   testImplementation(libs.androidx.core)
   testImplementation(libs.androidx.junit)

@@ -17,18 +17,15 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.data.FileSortType
+import com.example.data.FileItem
 import com.example.data.ViewMode
 import com.example.ui.components.*
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FileManagerScreen(
     viewModel: FileManagerViewModel,
@@ -54,127 +51,18 @@ fun FileManagerScreen(
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
-            TopAppBar(
-                title = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(
-                            modifier = Modifier
-                                .size(36.dp)
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.FolderZip,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(22.dp)
-                            )
-                        }
-                        Spacer(modifier = Modifier.width(10.dp))
-                        Text(
-                            text = "ArchivoX",
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 18.sp
-                            )
-                        )
-                    }
-                },
-                actions = {
-                    // Search toggle
-                    IconButton(
-                        onClick = { isSearchActive = !isSearchActive },
-                        modifier = Modifier.testTag("action_search")
-                    ) {
-                        Icon(
-                            imageVector = if (isSearchActive) Icons.Default.Close else Icons.Default.Search,
-                            contentDescription = "Buscar"
-                        )
-                    }
-
-                    // View Mode toggle (List vs Grid)
-                    IconButton(
-                        onClick = { viewModel.toggleViewMode() },
-                        modifier = Modifier.testTag("action_view_mode")
-                    ) {
-                        Icon(
-                            imageVector = if (uiState.viewMode == ViewMode.LIST) Icons.Default.GridView else Icons.Default.ViewList,
-                            contentDescription = "Cambiar vista"
-                        )
-                    }
-
-                    // Sort menu
-                    Box {
-                        IconButton(
-                            onClick = { viewModel.toggleSortMenu(true) },
-                            modifier = Modifier.testTag("action_sort")
-                        ) {
-                            Icon(imageVector = Icons.Default.Sort, contentDescription = "Ordenar")
-                        }
-
-                        DropdownMenu(
-                            expanded = uiState.showSortMenu,
-                            onDismissRequest = { viewModel.toggleSortMenu(false) }
-                        ) {
-                            DropdownMenuItem(
-                                text = { Text("Opciones de ordenación", fontWeight = FontWeight.Bold) },
-                                onClick = {},
-                                enabled = false
-                            )
-                            HorizontalDivider()
-
-                            FileSortType.values().forEach { sortType ->
-                                DropdownMenuItem(
-                                    text = {
-                                        Text(
-                                            text = sortType.labelEs,
-                                            fontWeight = if (uiState.sortType == sortType) FontWeight.Bold else FontWeight.Normal,
-                                            color = if (uiState.sortType == sortType) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-                                        )
-                                    },
-                                    onClick = { viewModel.setSortType(sortType) },
-                                    leadingIcon = {
-                                        if (uiState.sortType == sortType) {
-                                            Icon(Icons.Default.Check, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                                        }
-                                    }
-                                )
-                            }
-
-                            HorizontalDivider()
-
-                            DropdownMenuItem(
-                                text = {
-                                    Text(
-                                        text = if (uiState.showHiddenFiles) "Ocultar archivos (.)" else "Mostrar ocultos (.)"
-                                    )
-                                },
-                                onClick = {
-                                    viewModel.toggleShowHiddenFiles()
-                                    viewModel.toggleSortMenu(false)
-                                },
-                                leadingIcon = {
-                                    Icon(
-                                        imageVector = if (uiState.showHiddenFiles) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                        contentDescription = null
-                                    )
-                                }
-                            )
-                        }
-                    }
-
-                    // Settings Button
-                    IconButton(
-                        onClick = { viewModel.setShowSettingsSheet(true) },
-                        modifier = Modifier.testTag("action_settings")
-                    ) {
-                        Icon(imageVector = Icons.Default.Settings, contentDescription = "Configuración")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface
-                )
+            FileManagerTopBar(
+                isSearchActive = isSearchActive,
+                onToggleSearch = { isSearchActive = !isSearchActive },
+                viewMode = uiState.viewMode,
+                onToggleViewMode = { viewModel.toggleViewMode() },
+                showSortMenu = uiState.showSortMenu,
+                onToggleSortMenu = { viewModel.toggleSortMenu(it) },
+                sortType = uiState.sortType,
+                onSetSortType = { viewModel.setSortType(it) },
+                showHiddenFiles = uiState.showHiddenFiles,
+                onToggleShowHiddenFiles = { viewModel.toggleShowHiddenFiles() },
+                onOpenSettings = { viewModel.setShowSettingsSheet(true) }
             )
         },
         floatingActionButton = {
@@ -259,7 +147,7 @@ fun FileManagerScreen(
                 )
             }
 
-            // Main File List / Grid
+            // Main File List / Grid Content
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -272,47 +160,24 @@ fun FileManagerScreen(
                         color = MaterialTheme.colorScheme.primary
                     )
                 } else if (uiState.items.isEmpty()) {
-                    // Empty state
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .size(64.dp)
-                                .clip(RoundedCornerShape(20.dp))
-                                .background(MaterialTheme.colorScheme.surfaceVariant),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.FolderOpen,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.size(36.dp)
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        Text(
-                            text = "Esta carpeta está vacía",
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-
-                        Spacer(modifier = Modifier.height(6.dp))
-
-                        Text(
-                            text = "Usa el botón '+' para crear una nueva carpeta o explora otros directorios.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            textAlign = TextAlign.Center
-                        )
-                    }
+                    FileManagerEmptyState()
                 } else {
+                    val onItemClick: (FileItem) -> Unit = { item ->
+                        if (item.isDirectory) {
+                            viewModel.navigateTo(item.path)
+                        } else if (item.extension.lowercase() in listOf("pem", "key", "crt", "cer", "pub", "p8", "keytool")) {
+                            viewModel.openPemViewer(item)
+                        } else if (item.extension.lowercase() in listOf("txt", "md")) {
+                            viewModel.openTextFileWithExtension(item)
+                        } else {
+                            viewModel.selectItemForAction(item)
+                        }
+                    }
+
+                    val onItemOptionsClick: (FileItem) -> Unit = { item ->
+                        viewModel.selectItemForAction(item)
+                    }
+
                     if (uiState.viewMode == ViewMode.LIST) {
                         LazyColumn(
                             modifier = Modifier.fillMaxSize(),
@@ -321,20 +186,8 @@ fun FileManagerScreen(
                             items(uiState.items, key = { it.path }) { item ->
                                 FileItemRow(
                                     item = item,
-                                    onClick = {
-                                        if (item.isDirectory) {
-                                            viewModel.navigateTo(item.path)
-                                        } else if (item.extension.lowercase() in listOf("pem", "key", "crt", "cer", "pub", "p8", "keytool")) {
-                                            viewModel.openPemViewer(item)
-                                        } else if (item.extension.lowercase() in listOf("txt", "md")) {
-                                            viewModel.openTextFileWithExtension(item)
-                                        } else {
-                                            viewModel.selectItemForAction(item)
-                                        }
-                                    },
-                                    onOptionClick = {
-                                        viewModel.selectItemForAction(item)
-                                    }
+                                    onClick = { onItemClick(item) },
+                                    onOptionClick = { onItemOptionsClick(item) }
                                 )
                             }
                         }
@@ -349,20 +202,8 @@ fun FileManagerScreen(
                             items(uiState.items, key = { it.path }) { item ->
                                 FileItemCard(
                                     item = item,
-                                    onClick = {
-                                        if (item.isDirectory) {
-                                            viewModel.navigateTo(item.path)
-                                        } else if (item.extension.lowercase() in listOf("pem", "key", "crt", "cer", "pub", "p8", "keytool")) {
-                                            viewModel.openPemViewer(item)
-                                        } else if (item.extension.lowercase() in listOf("txt", "md")) {
-                                            viewModel.openTextFileWithExtension(item)
-                                        } else {
-                                            viewModel.selectItemForAction(item)
-                                        }
-                                    },
-                                    onOptionClick = {
-                                        viewModel.selectItemForAction(item)
-                                    }
+                                    onClick = { onItemClick(item) },
+                                    onOptionClick = { onItemOptionsClick(item) }
                                 )
                             }
                         }
