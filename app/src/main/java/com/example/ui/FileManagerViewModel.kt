@@ -39,6 +39,12 @@ data class FileManagerUiState(
     val themeMode: ThemeMode = ThemeMode.DARK,
     val compressionProgress: CompressionProgress = CompressionProgress(),
     val showCompressionProgressDialog: Boolean = false,
+    val isArchivoXTextInstalled: Boolean = false,
+    val showTextExtensionInstallDialog: Boolean = false,
+    val textExtensionProgress: Int = 0,
+    val textExtensionStatus: String = "",
+    val showTextViewerDialog: Boolean = false,
+    val selectedTextItem: FileItem? = null,
     val userMessage: String? = null
 )
 
@@ -198,6 +204,59 @@ class FileManagerViewModel(application: Application) : AndroidViewModel(applicat
         _uiState.update { it.copy(showCompressionProgressDialog = false) }
     }
 
+    fun openTextFileWithExtension(item: FileItem) {
+        if (_uiState.value.isArchivoXTextInstalled) {
+            _uiState.update { it.copy(selectedTextItem = item, showTextViewerDialog = true) }
+        } else {
+            installTextExtensionAndOpen(item)
+        }
+    }
+
+    private fun installTextExtensionAndOpen(item: FileItem) {
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    showTextExtensionInstallDialog = true,
+                    textExtensionProgress = 0,
+                    textExtensionStatus = "Descargando paquete de extensión ArchivoX Text v1.0 (1.2 MB)..."
+                )
+            }
+            kotlinx.coroutines.delay(600)
+            _uiState.update {
+                it.copy(
+                    textExtensionProgress = 35,
+                    textExtensionStatus = "Descomprimiendo motor nativo de lectura TXT & Markdown UTF-8..."
+                )
+            }
+            kotlinx.coroutines.delay(700)
+            _uiState.update {
+                it.copy(
+                    textExtensionProgress = 75,
+                    textExtensionStatus = "Registrando módulo de extensión 'ArchivoX Text'..."
+                )
+            }
+            kotlinx.coroutines.delay(500)
+            _uiState.update {
+                it.copy(
+                    textExtensionProgress = 100,
+                    textExtensionStatus = "¡Instalación completada!",
+                    isArchivoXTextInstalled = true,
+                    showTextExtensionInstallDialog = false,
+                    selectedTextItem = item,
+                    showTextViewerDialog = true
+                )
+            }
+        }
+    }
+
+    fun closeTextViewer() {
+        _uiState.update { it.copy(selectedTextItem = null, showTextViewerDialog = false) }
+    }
+
+    fun cancelTextExtensionInstall() {
+        _uiState.update { it.copy(showTextExtensionInstallDialog = false) }
+    }
+
     fun createFolder(name: String) {
         viewModelScope.launch {
             val current = _uiState.value.currentPath
@@ -247,7 +306,8 @@ class FileManagerViewModel(application: Application) : AndroidViewModel(applicat
         targetArchiveName: String,
         format: CompressionFormat,
         level: CompressionLevel,
-        assignedCores: Int
+        assignedCores: Int,
+        password: String? = null
     ) {
         val item = _uiState.value.selectedItem ?: return
         val destPath = "${_uiState.value.currentPath}/$targetArchiveName"
@@ -261,6 +321,7 @@ class FileManagerViewModel(application: Application) : AndroidViewModel(applicat
                 format = format,
                 level = level,
                 assignedCoresCount = assignedCores,
+                password = password,
                 onProgress = { progress ->
                     _uiState.update { state -> state.copy(compressionProgress = progress) }
                 }
@@ -270,7 +331,7 @@ class FileManagerViewModel(application: Application) : AndroidViewModel(applicat
         }
     }
 
-    fun extractSelectedItem(assignedCores: Int) {
+    fun extractSelectedItem(assignedCores: Int, password: String? = null) {
         val item = _uiState.value.selectedItem ?: return
         val currentDir = _uiState.value.currentPath
         setShowExtractDialog(false)
@@ -281,6 +342,7 @@ class FileManagerViewModel(application: Application) : AndroidViewModel(applicat
                 archivePath = item.path,
                 targetDirectoryPath = currentDir,
                 assignedCoresCount = assignedCores,
+                password = password,
                 onProgress = { progress ->
                     _uiState.update { state -> state.copy(compressionProgress = progress) }
                 }

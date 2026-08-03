@@ -22,6 +22,6 @@ dependencyResolutionManagement {
   }
 }
 
-rootProject.name = "Gestor de Archivos"
+rootProject.name = "ArchivoX"
 
 include(":app")

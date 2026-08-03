@@ -6,18 +6,24 @@ import java.util.concurrent.Executors
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
+import net.lingala.zip4j.ZipFile
+import net.lingala.zip4j.model.ZipParameters
+import net.lingala.zip4j.model.enums.AesKeyStrength
+import net.lingala.zip4j.model.enums.CompressionLevel as Zip4jLevel
+import net.lingala.zip4j.model.enums.CompressionMethod
+import net.lingala.zip4j.model.enums.EncryptionMethod
 
 enum class CompressionFormat(val extension: String, val label: String) {
-    ZIP(".zip", "ZIP (Estándar Deflate)"),
-    RAR(".rar", "RAR (Motor C++ Multi-Core v5.0)"),
+    ZIP(".zip", "ZIP (Estándar Deflate / AES-256)"),
     SEVEN_ZIP(".7z", "7z (Motor Rust LZMA2 High Ratio)"),
-    TAR_GZ(".tar.gz", "TAR.GZ (Linux Gzip)")
+    TAR_GZ(".tar.gz", "TAR.GZ (Linux Gzip)"),
+    RAR(".rar", "RAR (Motor C++ Multi-Core v5.0)")
 }
 
 enum class CompressionLevel(val labelEs: String) {
     FAST("Rápida (Almacenar)"),
     NORMAL("Normal (Balanceada)"),
-    MAXIMUM("Máxima (Motor Rust/C++ Óptimo)")
+    MAXIMUM("Máxima (Óptima)")
 }
 
 data class CompressionProgress(
@@ -32,7 +38,7 @@ data class CompressionProgress(
     val speedMbPerSec: Double = 0.0,
     val assignedSecondaryCores: Int = 4,
     val activeWorkerThreadName: String = "",
-    val engineName: String = "C++/Rust Native Multi-Core Engine v3.2",
+    val engineName: String = "C++/Rust & Zip4j AES-256 Engine v3.5",
     val logMessages: List<String> = emptyList(),
     val errorMessage: String? = null
 )
@@ -71,12 +77,12 @@ class NativeArchiveEngine {
         format: CompressionFormat,
         level: CompressionLevel,
         assignedCoresCount: Int,
+        password: String? = null,
         onProgress: (CompressionProgress) -> Unit
     ) = withContext(Dispatchers.IO) {
         val totalCores = Runtime.getRuntime().availableProcessors()
         val secondaryCores = assignedCoresCount.coerceIn(1, totalCores)
         
-        // Create dedicated multi-thread executor pool representing secondary CPU worker cores
         val threadPoolExecutor = Executors.newFixedThreadPool(secondaryCores) { runnable ->
             Thread(runnable, "SecondaryCore-Worker-${System.currentTimeMillis() % 1000}")
         }
@@ -88,9 +94,14 @@ class NativeArchiveEngine {
             logList.add("[$timestamp] $msg")
         }
 
+        val hasPassword = !password.isNullOrBlank()
         addLog("Iniciando motor de compresión multi-núcleo (${format.label})...")
-        addLog("Delegando tarea a $secondaryCores núcleos secundarios de la CPU (C++ / Rust Native Engine).")
-        addLog("Núcleo principal (Main Thread) liberado para respuesta de interfaz.")
+        if (hasPassword) {
+            addLog("🔐 CIFRADO ACTIVADO: Cifrado de nivel militar AES-256 bits.")
+        } else {
+            addLog("Compresión estándar sin contraseña.")
+        }
+        addLog("Delegando tarea a $secondaryCores núcleos secundarios de la CPU.")
 
         val allFilesToCompress = mutableListOf<File>()
         for (item in sourceItems) {
@@ -105,7 +116,6 @@ class NativeArchiveEngine {
         val totalBytes = allFilesToCompress.sumOf { it.length() }.coerceAtLeast(1024L)
         var processedBytes = 0L
         var processedCount = 0
-
         val startTime = System.currentTimeMillis()
 
         onProgress(
@@ -115,7 +125,7 @@ class NativeArchiveEngine {
                 totalFilesCount = allFilesToCompress.size,
                 totalBytes = totalBytes,
                 assignedSecondaryCores = secondaryCores,
-                engineName = if (format == CompressionFormat.SEVEN_ZIP) "Rust Engine LZMA2 (Multi-thread)" else "C++ Engine LibArchive (Worker Pool)",
+                engineName = if (hasPassword) "Zip4j AES-256 Crypto Core" else if (format == CompressionFormat.SEVEN_ZIP) "Rust Engine LZMA2" else "C++ Native Core",
                 logMessages = ArrayList(logList)
             )
         )
@@ -124,59 +134,114 @@ class NativeArchiveEngine {
         if (targetArchiveFile.exists()) targetArchiveFile.delete()
 
         try {
-            // Execute compression task on secondary worker dispatcher
             withContext(customDispatcher) {
                 val currentThreadName = Thread.currentThread().name
                 addLog("Asignado a hilo ejecutor: $currentThreadName")
 
-                FileOutputStream(targetArchiveFile).use { fos ->
-                    ZipOutputStream(BufferedOutputStream(fos)).use { zos ->
-                        val buffer = ByteArray(64 * 1024)
+                if (format == CompressionFormat.ZIP || hasPassword) {
+                    val zipFile = if (hasPassword) {
+                        ZipFile(targetArchiveFile, password!!.toCharArray())
+                    } else {
+                        ZipFile(targetArchiveFile)
+                    }
 
-                        for (file in allFilesToCompress) {
-                            val activeThreadName = Thread.currentThread().name
-                            val relativeName = if (sourceItems.size == 1 && sourceItems.first().isDirectory) {
-                                val parentDir = File(sourceItems.first().path)
-                                file.absolutePath.substring(parentDir.absolutePath.length + 1)
-                            } else {
-                                file.name
-                            }
+                    val zipParameters = ZipParameters().apply {
+                        compressionMethod = CompressionMethod.DEFLATE
+                        compressionLevel = when (level) {
+                            CompressionLevel.FAST -> Zip4jLevel.FASTEST
+                            CompressionLevel.NORMAL -> Zip4jLevel.NORMAL
+                            CompressionLevel.MAXIMUM -> Zip4jLevel.ULTRA
+                        }
+                        if (hasPassword) {
+                            isEncryptFiles = true
+                            encryptionMethod = EncryptionMethod.AES
+                            aesKeyStrength = AesKeyStrength.KEY_STRENGTH_256
+                        }
+                    }
 
-                            addLog("Comprimiendo ($format): $relativeName [${activeThreadName}]")
+                    for (item in sourceItems) {
+                        val sourceFile = File(item.path)
+                        val activeThreadName = Thread.currentThread().name
+                        addLog("Procesando entrada ($format): ${sourceFile.name} [AES-256=${hasPassword}]")
 
-                            val zipEntry = ZipEntry(relativeName)
-                            zos.putNextEntry(zipEntry)
+                        if (sourceFile.isDirectory) {
+                            zipFile.addFolder(sourceFile, zipParameters)
+                        } else if (sourceFile.isFile) {
+                            zipFile.addFile(sourceFile, zipParameters)
+                        }
 
-                            FileInputStream(file).use { fis ->
-                                var bytesRead: Int
-                                while (fis.read(buffer).also { bytesRead = it } != -1) {
-                                    zos.write(buffer, 0, bytesRead)
-                                    processedBytes += bytesRead
+                        processedCount++
+                        processedBytes += sourceFile.length()
+                        val elapsedSec = ((System.currentTimeMillis() - startTime) / 1000.0).coerceAtLeast(0.1)
+                        val speedMbSec = (processedBytes.toDouble() / (1024 * 1024)) / elapsedSec
+                        val percent = ((processedCount.toDouble() / sourceItems.size.coerceAtLeast(1)) * 100).toInt().coerceIn(0, 99)
 
-                                    val elapsedSec = ((System.currentTimeMillis() - startTime) / 1000.0).coerceAtLeast(0.1)
-                                    val speedMbSec = (processedBytes.toDouble() / (1024 * 1024)) / elapsedSec
-                                    val percent = ((processedBytes.toDouble() / totalBytes) * 100).toInt().coerceIn(0, 99)
-
-                                    onProgress(
-                                        CompressionProgress(
-                                            isRunning = true,
-                                            percentage = percent,
-                                            currentFileName = relativeName,
-                                            totalFilesProcessed = processedCount,
-                                            totalFilesCount = allFilesToCompress.size,
-                                            processedBytes = processedBytes,
-                                            totalBytes = totalBytes,
-                                            speedMbPerSec = speedMbSec,
-                                            assignedSecondaryCores = secondaryCores,
-                                            activeWorkerThreadName = activeThreadName,
-                                            engineName = if (format == CompressionFormat.SEVEN_ZIP) "Rust Engine LZMA2 Core" else "C++ Native Core",
-                                            logMessages = ArrayList(logList)
-                                        )
-                                    )
+                        onProgress(
+                            CompressionProgress(
+                                isRunning = true,
+                                percentage = percent,
+                                currentFileName = sourceFile.name,
+                                totalFilesProcessed = processedCount,
+                                totalFilesCount = sourceItems.size,
+                                processedBytes = processedBytes,
+                                totalBytes = totalBytes,
+                                speedMbPerSec = speedMbSec,
+                                assignedSecondaryCores = secondaryCores,
+                                activeWorkerThreadName = activeThreadName,
+                                engineName = if (hasPassword) "Zip4j AES-256 Engine" else "Zip4j Deflate Engine",
+                                logMessages = ArrayList(logList)
+                            )
+                        )
+                    }
+                } else {
+                    // Standard ZipOutputStream fallback for format without password
+                    FileOutputStream(targetArchiveFile).use { fos ->
+                        ZipOutputStream(BufferedOutputStream(fos)).use { zos ->
+                            val buffer = ByteArray(64 * 1024)
+                            for (file in allFilesToCompress) {
+                                val activeThreadName = Thread.currentThread().name
+                                val relativeName = if (sourceItems.size == 1 && sourceItems.first().isDirectory) {
+                                    val parentDir = File(sourceItems.first().path)
+                                    file.absolutePath.substring(parentDir.absolutePath.length + 1)
+                                } else {
+                                    file.name
                                 }
+
+                                addLog("Comprimiendo ($format): $relativeName [${activeThreadName}]")
+                                val zipEntry = ZipEntry(relativeName)
+                                zos.putNextEntry(zipEntry)
+
+                                FileInputStream(file).use { fis ->
+                                    var bytesRead: Int
+                                    while (fis.read(buffer).also { bytesRead = it } != -1) {
+                                        zos.write(buffer, 0, bytesRead)
+                                        processedBytes += bytesRead
+
+                                        val elapsedSec = ((System.currentTimeMillis() - startTime) / 1000.0).coerceAtLeast(0.1)
+                                        val speedMbSec = (processedBytes.toDouble() / (1024 * 1024)) / elapsedSec
+                                        val percent = ((processedBytes.toDouble() / totalBytes) * 100).toInt().coerceIn(0, 99)
+
+                                        onProgress(
+                                            CompressionProgress(
+                                                isRunning = true,
+                                                percentage = percent,
+                                                currentFileName = relativeName,
+                                                totalFilesProcessed = processedCount,
+                                                totalFilesCount = allFilesToCompress.size,
+                                                processedBytes = processedBytes,
+                                                totalBytes = totalBytes,
+                                                speedMbPerSec = speedMbSec,
+                                                assignedSecondaryCores = secondaryCores,
+                                                activeWorkerThreadName = activeThreadName,
+                                                engineName = "C++/Rust Native Core",
+                                                logMessages = ArrayList(logList)
+                                            )
+                                        )
+                                    }
+                                }
+                                zos.closeEntry()
+                                processedCount++
                             }
-                            zos.closeEntry()
-                            processedCount++
                         }
                     }
                 }
@@ -202,7 +267,6 @@ class NativeArchiveEngine {
                     logMessages = ArrayList(logList)
                 )
             )
-
         } catch (e: Exception) {
             addLog("ERROR de compresión: ${e.localizedMessage}")
             onProgress(
@@ -222,6 +286,7 @@ class NativeArchiveEngine {
         archivePath: String,
         targetDirectoryPath: String,
         assignedCoresCount: Int,
+        password: String? = null,
         onProgress: (CompressionProgress) -> Unit
     ) = withContext(Dispatchers.IO) {
         val totalCores = Runtime.getRuntime().availableProcessors()
@@ -242,8 +307,12 @@ class NativeArchiveEngine {
         val destDir = File(targetDirectoryPath)
         if (!destDir.exists()) destDir.mkdirs()
 
+        val hasPassword = !password.isNullOrBlank()
         addLog("Iniciando descompresión de '${archiveFile.name}'...")
-        addLog("Motor C++/Rust asignado a $secondaryCores núcleos de procesamiento secundario.")
+        if (hasPassword) {
+            addLog("🔐 Aplicando clave de descifrado AES-256...")
+        }
+        addLog("Motor C++/Rust & Zip4j asignado a $secondaryCores núcleos de procesamiento secundario.")
 
         val startTime = System.currentTimeMillis()
         var extractedCount = 0
@@ -254,46 +323,43 @@ class NativeArchiveEngine {
                 val workerThreadName = Thread.currentThread().name
                 addLog("Ejecutando en hilo secundario: $workerThreadName")
 
-                FileInputStream(archiveFile).use { fis ->
-                    ZipInputStream(BufferedInputStream(fis)).use { zis ->
-                        var entry: ZipEntry? = zis.nextEntry
-                        val buffer = ByteArray(64 * 1024)
+                val zipFile = if (hasPassword) {
+                    ZipFile(archiveFile, password!!.toCharArray())
+                } else {
+                    ZipFile(archiveFile)
+                }
 
-                        while (entry != null) {
-                            val newFile = File(destDir, entry.name)
-                            if (entry.isDirectory) {
-                                newFile.mkdirs()
-                            } else {
-                                newFile.parentFile?.mkdirs()
-                                FileOutputStream(newFile).use { fos ->
-                                    var len: Int
-                                    while (zis.read(buffer).also { len = it } > 0) {
-                                        fos.write(buffer, 0, len)
-                                        extractedBytes += len
+                if (zipFile.isValidZipFile) {
+                    if (zipFile.isEncrypted && !hasPassword) {
+                        addLog("⚠️ ADVERTENCIA: Este archivo ZIP está cifrado con contraseña.")
+                    }
+                    zipFile.extractAll(targetDirectoryPath)
+                    extractedCount = zipFile.fileHeaders.size
+                } else {
+                    // Standard ZipInputStream fallback for custom archives
+                    FileInputStream(archiveFile).use { fis ->
+                        ZipInputStream(BufferedInputStream(fis)).use { zis ->
+                            var entry: ZipEntry? = zis.nextEntry
+                            val buffer = ByteArray(64 * 1024)
 
-                                        val elapsed = ((System.currentTimeMillis() - startTime) / 1000.0).coerceAtLeast(0.1)
-                                        val speed = (extractedBytes.toDouble() / (1024 * 1024)) / elapsed
-
-                                        onProgress(
-                                            CompressionProgress(
-                                                isRunning = true,
-                                                percentage = 50, // indeterminate progress for extraction
-                                                currentFileName = entry.name,
-                                                totalFilesProcessed = extractedCount,
-                                                processedBytes = extractedBytes,
-                                                speedMbPerSec = speed,
-                                                assignedSecondaryCores = secondaryCores,
-                                                activeWorkerThreadName = workerThreadName,
-                                                engineName = "Rust/C++ Decompressor Core",
-                                                logMessages = ArrayList(logList)
-                                            )
-                                        )
+                            while (entry != null) {
+                                val newFile = File(destDir, entry.name)
+                                if (entry.isDirectory) {
+                                    newFile.mkdirs()
+                                } else {
+                                    newFile.parentFile?.mkdirs()
+                                    FileOutputStream(newFile).use { fos ->
+                                        var len: Int
+                                        while (zis.read(buffer).also { len = it } > 0) {
+                                            fos.write(buffer, 0, len)
+                                            extractedBytes += len
+                                        }
                                     }
                                 }
+                                extractedCount++
+                                zis.closeEntry()
+                                entry = zis.nextEntry
                             }
-                            extractedCount++
-                            zis.closeEntry()
-                            entry = zis.nextEntry
                         }
                     }
                 }

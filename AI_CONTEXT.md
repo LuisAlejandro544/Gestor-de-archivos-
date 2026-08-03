@@ -1,15 +1,17 @@
-# AI Context — Contexto del Sistema para Inteligencia Artificial
+# AI Context — ArchivoX System Context
 
-Este archivo proporciona contexto técnico profundo a modelos de lenguaje (LLMs) y agentes de IA que analicen o modifiquen este código.
+Este archivo proporciona contexto técnico profundo a modelos de lenguaje (LLMs) y agentes de IA que analicen o modifiquen el código de **ArchivoX**.
 
 ---
 
 ## 🛠 Tech Stack de la Aplicación
 
+- **Nombre de la App:** ArchivoX
 - **Lenguaje:** Kotlin 2.x
 - **UI Framework:** Jetpack Compose (Material Design 3)
 - **Concurrencia:** Kotlin Coroutines (`Dispatchers.IO`, `withContext`, `StateFlow`)
 - **Arquitectura UI:** MVVM (Model-View-ViewModel) con `AndroidViewModel`
+- **Librería de Cifrado ZIP:** `Zip4j` (`net.lingala.zip4j`) con cifrado militar AES-256 bits y algoritmos Deflate/Fastest/Ultra.
 - **Módulos Nativos:**
   - **C++ (NDK CMake):** `app/src/main/cpp/native-archive.cpp`
   - **Rust (Cargo):** `rust-native/src/lib.rs`
@@ -21,24 +23,15 @@ Este archivo proporciona contexto técnico profundo a modelos de lenguaje (LLMs)
 
 1. **Gestión de Permisos:**
    - La aplicación utiliza `Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION` en Android 11+ (API 30+) para garantizar el acceso a todos los archivos del usuario en `/storage/emulated/0`.
-   - Mantiene compatibilidad con `READ_EXTERNAL_STORAGE` / `WRITE_EXTERNAL_STORAGE` para versiones anteriores.
 
-2. **Integridad del Tema y Paletas:**
-   - No se deben colocar valores hexadecimales quemados en Composables.
-   - Usar siempre `MaterialTheme.colorScheme` o los valores centralizados en `Color.kt`.
-   - Las tres variantes activas son:
-     - `AppColorPalette.EMERALD`: Estilo ZArchiver clásico.
-     - `AppColorPalette.AMOLED`: Fondo #000000 puro.
-     - `AppColorPalette.MATERIAL_YOU`: Colores dinámicos del sistema Android 12+.
+2. **Cifrado y Compresión (Zip4j + NDK):**
+   - Soporte 100% funcional para archivos ZIP cifrados con contraseña mediante la especificación AES-256.
+   - Flujo de interacción optimizado: las opciones de la hoja de acciones ejecutan los diálogos de compresión/extracción de forma fluida.
 
 3. **Manejo de Operaciones de Compresión:**
    - La clase `NativeArchiveEngine` emite estados mediante callbacks de `CompressionProgress`.
-   - La barra de progreso de compresión muestra velocidad en MB/s, hilo secundario activo asignado y logs detallados estilo consola.
+   - La consola en tiempo real muestra velocidad en MB/s, hilo secundario activo asignado y logs estilo terminal.
 
-4. **Visor Nativo de Claves y Certificados PEM (`PemViewerDialog.kt`):**
-   - Manejo especializado de archivos `.pem`, `.key`, `.crt`, `.cer`, `.pub`, `.p8`.
+4. **Visor Nativo PEM (`PemViewerDialog.kt`):**
    - Inspección sintáctica sin alterar la codificación original ni requerir renombrado a `.txt`.
-   - Cálculo de huella digital SHA-256 en memoria, aislamiento de bloque Base64 y copia directa al portapapeles.
 
-5. **Identificadores y TestTags:**
-   - Se deben mantener las etiquetas `Modifier.testTag("...")` en los botones y campos interactivos clave para soportar pruebas automatizadas y localización de componentes por agentes de IA.

@@ -73,7 +73,7 @@ fun FileManagerScreen(
                         }
                         Spacer(modifier = Modifier.width(10.dp))
                         Text(
-                            text = "Gestor de Archivos",
+                            text = "ArchivoX",
                             style = MaterialTheme.typography.titleLarge.copy(
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 18.sp
@@ -326,6 +326,8 @@ fun FileManagerScreen(
                                             viewModel.navigateTo(item.path)
                                         } else if (item.extension.lowercase() in listOf("pem", "key", "crt", "cer", "pub", "p8", "keytool")) {
                                             viewModel.openPemViewer(item)
+                                        } else if (item.extension.lowercase() in listOf("txt", "md")) {
+                                            viewModel.openTextFileWithExtension(item)
                                         } else {
                                             viewModel.selectItemForAction(item)
                                         }
@@ -352,6 +354,8 @@ fun FileManagerScreen(
                                             viewModel.navigateTo(item.path)
                                         } else if (item.extension.lowercase() in listOf("pem", "key", "crt", "cer", "pub", "p8", "keytool")) {
                                             viewModel.openPemViewer(item)
+                                        } else if (item.extension.lowercase() in listOf("txt", "md")) {
+                                            viewModel.openTextFileWithExtension(item)
                                         } else {
                                             viewModel.selectItemForAction(item)
                                         }
@@ -383,7 +387,8 @@ fun FileManagerScreen(
                 onDeleteClick = { viewModel.setShowDeleteDialog(true) },
                 onCompressClick = { viewModel.setShowCompressDialog(true) },
                 onExtractClick = { viewModel.setShowExtractDialog(true) },
-                onPemViewerClick = { viewModel.openPemViewer(item) }
+                onPemViewerClick = { viewModel.openPemViewer(item) },
+                onTextEditorClick = { viewModel.openTextFileWithExtension(item) }
             )
         }
     }
@@ -393,8 +398,8 @@ fun FileManagerScreen(
         CompressFileDialog(
             defaultName = uiState.selectedItem!!.name.substringBeforeLast("."),
             onDismiss = { viewModel.setShowCompressDialog(false) },
-            onCompress = { targetName, format, level, cores ->
-                viewModel.compressSelectedItem(targetName, format, level, cores)
+            onCompress = { targetName, format, level, cores, password ->
+                viewModel.compressSelectedItem(targetName, format, level, cores, password)
             }
         )
     }
@@ -404,8 +409,8 @@ fun FileManagerScreen(
         ExtractArchiveDialog(
             archiveName = uiState.selectedItem!!.name,
             onDismiss = { viewModel.setShowExtractDialog(false) },
-            onConfirmExtract = { cores ->
-                viewModel.extractSelectedItem(cores)
+            onConfirmExtract = { cores, password ->
+                viewModel.extractSelectedItem(cores, password)
             }
         )
     }
@@ -462,6 +467,23 @@ fun FileManagerScreen(
         PemViewerDialog(
             item = uiState.selectedPemItem!!,
             onDismiss = { viewModel.closePemViewer() }
+        )
+    }
+
+    // ArchivoX Text Extension Installation Dialog
+    if (uiState.showTextExtensionInstallDialog) {
+        TextExtensionInstallDialog(
+            progress = uiState.textExtensionProgress,
+            statusText = uiState.textExtensionStatus,
+            onCancel = { viewModel.cancelTextExtensionInstall() }
+        )
+    }
+
+    // ArchivoX Text Native Viewer Dialog
+    if (uiState.showTextViewerDialog && uiState.selectedTextItem != null) {
+        ArchivoXTextViewerDialog(
+            item = uiState.selectedTextItem!!,
+            onDismiss = { viewModel.closeTextViewer() }
         )
     }
 }

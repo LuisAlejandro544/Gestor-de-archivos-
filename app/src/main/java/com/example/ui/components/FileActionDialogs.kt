@@ -35,12 +35,14 @@ fun FileDetailsBottomSheet(
     onDeleteClick: () -> Unit,
     onCompressClick: () -> Unit,
     onExtractClick: () -> Unit,
-    onPemViewerClick: () -> Unit = {}
+    onPemViewerClick: () -> Unit = {},
+    onTextEditorClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val iconInfo = getFileIconAndColor(item.fileType, item.isDirectory)
     val apkIcon = if (item.fileType == FileType.APK) rememberApkIcon(context, item.path) else null
     val isPemOrKey = item.extension.lowercase() in listOf("pem", "key", "crt", "cer", "pub", "p8", "keytool")
+    val isTextOrMd = item.extension.lowercase() in listOf("txt", "md") || item.fileType == FileType.DOCUMENT
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -113,7 +115,6 @@ fun FileDetailsBottomSheet(
             if (isPemOrKey) {
                 Button(
                     onClick = {
-                        onDismiss()
                         onPemViewerClick()
                     },
                     modifier = Modifier
@@ -129,6 +130,26 @@ fun FileDetailsBottomSheet(
                 Spacer(modifier = Modifier.height(10.dp))
             }
 
+            // ArchivoX Text Extension Viewer Button
+            if (isTextOrMd) {
+                Button(
+                    onClick = {
+                        onDismiss()
+                        onTextEditorClick()
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("action_view_text"),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondaryContainer, contentColor = MaterialTheme.colorScheme.onSecondaryContainer)
+                ) {
+                    Icon(Icons.Default.Article, contentDescription = null, modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Abrir con ArchivoX Text", fontWeight = FontWeight.Bold)
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+            }
+
             // Compression & Extraction Actions (Multi-Core Native Engine C++/Rust)
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -137,7 +158,6 @@ fun FileDetailsBottomSheet(
                 if (item.fileType == FileType.ARCHIVE) {
                     Button(
                         onClick = {
-                            onDismiss()
                             onExtractClick()
                         },
                         modifier = Modifier
@@ -153,7 +173,6 @@ fun FileDetailsBottomSheet(
 
                 Button(
                     onClick = {
-                        onDismiss()
                         onCompressClick()
                     },
                     modifier = Modifier
@@ -213,7 +232,6 @@ fun FileDetailsBottomSheet(
             ) {
                 OutlinedButton(
                     onClick = {
-                        onDismiss()
                         onRenameClick()
                     },
                     modifier = Modifier
@@ -227,7 +245,6 @@ fun FileDetailsBottomSheet(
 
                 Button(
                     onClick = {
-                        onDismiss()
                         onDeleteClick()
                     },
                     modifier = Modifier
