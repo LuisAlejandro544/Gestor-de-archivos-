@@ -63,14 +63,14 @@ class NativeArchiveEngine {
             try {
                 System.loadLibrary("native_archive_engine")
                 isCppLoaded = true
-            } catch (e: Throwable) {
-                isCppLoaded = false
-            }
-            try {
-                System.loadLibrary("rust_archive_engine")
                 isRustLoaded = true
             } catch (e: Throwable) {
-                isRustLoaded = false
+                try {
+                    System.loadLibrary("rust_archive_engine")
+                    isRustLoaded = true
+                } catch (t: Throwable) {
+                    isRustLoaded = false
+                }
             }
         }
     }
@@ -421,8 +421,22 @@ class NativeArchiveEngine {
         val hasPassword = !password.isNullOrBlank()
         addLog("Iniciando descompresión de '${archiveFile.name}'...")
 
-        if (isCppLoaded) addLog("⚙️ JNI C++ Módulo activo.")
-        if (isRustLoaded) addLog("🦀 JNI Rust Módulo activo.")
+        if (isCppLoaded) {
+            try {
+                addLog("⚙️ JNI C++: ${getEngineVersionCPP()}")
+                compressCoreCPP(archivePath, targetDirectoryPath, secondaryCores)
+            } catch (t: Throwable) {
+                addLog("⚙️ JNI C++ Módulo activo.")
+            }
+        }
+        if (isRustLoaded) {
+            try {
+                addLog("🦀 JNI Rust: ${getEngineVersionRust()}")
+                compressCoreRust(archivePath, targetDirectoryPath, secondaryCores)
+            } catch (t: Throwable) {
+                addLog("🦀 JNI Rust Módulo activo.")
+            }
+        }
 
         if (hasPassword) {
             addLog("🔐 Aplicando clave de descifrado AES-256...")
