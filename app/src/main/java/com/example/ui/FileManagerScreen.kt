@@ -165,6 +165,8 @@ fun FileManagerScreen(
                     val onItemClick: (FileItem) -> Unit = { item ->
                         if (item.isDirectory) {
                             viewModel.navigateTo(item.path)
+                        } else if (item.fileType == com.example.data.FileType.ARCHIVE || item.extension.lowercase() in listOf("zip", "7z", "tar", "gz", "tgz", "apk", "jar", "rar")) {
+                            viewModel.openZipExplorer(item)
                         } else if (item.extension.lowercase() in listOf("pem", "key", "crt", "cer", "pub", "p8", "keytool")) {
                             viewModel.openPemViewer(item)
                         } else if (item.extension.lowercase() in listOf("txt", "md")) {
@@ -228,10 +230,25 @@ fun FileManagerScreen(
                 onDeleteClick = { viewModel.setShowDeleteDialog(true) },
                 onCompressClick = { viewModel.setShowCompressDialog(true) },
                 onExtractClick = { viewModel.setShowExtractDialog(true) },
+                onExploreZipClick = { viewModel.openZipExplorer(item) },
                 onPemViewerClick = { viewModel.openPemViewer(item) },
                 onTextEditorClick = { viewModel.openTextFileWithExtension(item) }
             )
         }
+    }
+
+    // Zip Explorer Dialog
+    if (uiState.showZipExplorerDialog && uiState.selectedZipItem != null) {
+        ZipExplorerDialog(
+            zipItem = uiState.selectedZipItem!!,
+            currentDir = uiState.currentPath,
+            onDismiss = { viewModel.closeZipExplorer() },
+            onExtractAllClick = {
+                viewModel.selectItemForAction(uiState.selectedZipItem)
+                viewModel.closeZipExplorer()
+                viewModel.setShowExtractDialog(true)
+            }
+        )
     }
 
     // Compress File Dialog

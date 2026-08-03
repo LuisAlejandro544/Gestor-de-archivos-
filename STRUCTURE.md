@@ -21,7 +21,8 @@ Este documento describe la organización jerárquica de archivos y carpetas del 
 │           │   ├── data/
 │           │   │   ├── FileItem.kt    # Modelo de datos para archivos y carpetas
 │           │   │   ├── FileRepository.kt # Repositorio de lectura y operaciones I/O
-│           │   │   └── NativeArchiveEngine.kt # Motor JNI / Zip4j AES-256 / Coroutines C++ y Rust
+│           │   │   ├── NativeArchiveEngine.kt # Motor JNI / Zip4j AES-256 / Coroutines C++ y Rust
+│           │   │   └── ZipViewerEngine.kt     # Motor de inspección, árbol de directorios y lectura interna de ZIP/7z/Tar/APK
 │           │   ├── ui/
 │           │   │   ├── FileManagerViewModel.kt # ViewModel principal y UI State
 │           │   │   ├── FileManagerScreen.kt    # Composable raíz de la interfaz ArchivoX
@@ -40,7 +41,8 @@ Este documento describe la organización jerárquica de archivos y carpetas del 
 │           │   │   │   ├── SettingsSheet.kt       # Hoja de configuración de temas y paletas
 │           │   │   │   ├── StorageHeader.kt       # Card de espacio de almacenamiento y filtros
 │           │   │   │   ├── TextExtensionInstallDialog.kt # Diálogo modal de instalación del módulo de extensión ArchivoX Text
-│           │   │   │   └── TextRenderers.kt       # Renderizadores de texto plano con numeración de líneas y Markdown
+│           │   │   │   ├── TextRenderers.kt       # Renderizadores de texto plano con numeración de líneas y Markdown
+│           │   │   │   └── ZipExplorerDialog.kt    # Diálogo modal de navegación y exploración interna de archivos .ZIP/7Z/APK
 │           │   │   └── theme/
 │           │   │       ├── Color.kt               # Paletas Verde Esmeralda, AMOLED y Light
 │           │   │       ├── Theme.kt               # Composable de tema dinámico M3

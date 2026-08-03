@@ -28,8 +28,10 @@ Este archivo proporciona contexto técnico profundo a modelos de lenguaje (LLMs)
    - Soporte 100% funcional para archivos ZIP cifrados con contraseña mediante la especificación AES-256.
    - Flujo de interacción optimizado: las opciones de la hoja de acciones ejecutan los diálogos de compresión/extracción de forma fluida.
 
-3. **Manejo de Operaciones de Compresión:**
+3. **Manejo de Operaciones de Compresión y Exploración ZIP:**
    - La clase `NativeArchiveEngine` emite estados mediante callbacks de `CompressionProgress`.
+   - La clase `ZipViewerEngine` genera la jerarquía virtual de carpetas y archivos dentro de `.zip`, `.7z`, `.tar.gz`, `.apk` y `.jar`.
+   - `ZipExplorerDialog` permite navegar por subcarpetas dentro del ZIP con breadcrumbs, buscar elementos y previsualizar archivos de texto en RAM sin extraer en disco.
    - La consola en tiempo real muestra velocidad en MB/s, hilo secundario activo asignado y logs estilo terminal.
 
 4. **Visor Nativo PEM (`PemViewerDialog.kt`):**

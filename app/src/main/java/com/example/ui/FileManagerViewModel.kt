@@ -45,6 +45,8 @@ data class FileManagerUiState(
     val textExtensionStatus: String = "",
     val showTextViewerDialog: Boolean = false,
     val selectedTextItem: FileItem? = null,
+    val showZipExplorerDialog: Boolean = false,
+    val selectedZipItem: FileItem? = null,
     val userMessage: String? = null
 )
 
@@ -198,6 +200,14 @@ class FileManagerViewModel(application: Application) : AndroidViewModel(applicat
 
     fun closePemViewer() {
         _uiState.update { it.copy(selectedPemItem = null, showPemViewerDialog = false) }
+    }
+
+    fun openZipExplorer(item: FileItem) {
+        _uiState.update { it.copy(selectedZipItem = item, showZipExplorerDialog = true) }
+    }
+
+    fun closeZipExplorer() {
+        _uiState.update { it.copy(selectedZipItem = null, showZipExplorerDialog = false) }
     }
 
     fun dismissCompressionProgress() {

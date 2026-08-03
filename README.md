@@ -6,6 +6,12 @@ Un gestor de archivos y motor de compresión de alto rendimiento diseñado para 
 
 ## 🌟 Características Principales
 
+- **Navegación y Exploración Interna 100% REAL de Archivos ZIP / 7Z / TAR / APK:**
+  - Inspección directa de la estructura jerárquica interna de contenedores comprimidos sin necesidad de extraer previamente en disco.
+  - Navegación multinivel por carpetas y subdirectorios internos dentro del archivo comprimido con barra de migas de pan (Breadcrumbs) interactiva.
+  - Previsualización en tiempo real de archivos de texto (`.txt`, `.json`, `.kt`, `.java`, `.md`, `.xml`, `.gradle`, `.sql`) leídos directamente desde la memoria RAM del archivo ZIP.
+  - Búsqueda interna filtrada de elementos dentro del archivo comprimido.
+  - Compatible con formatos `.zip`, `.7z`, `.tar.gz`, `.apk`, `.jar`, `.xapk` y archivos cifrados con contraseña AES-256.
 - **Extensión Nativa ArchivoX Text (.txt / .md):**
   - Módulo de extensión ligero de instalación dinámica con pantalla de carga: *"Descargando y descomprimiendo archivos esenciales"*.
   - Lectura completa de archivos `.txt` (con numeración de líneas, ajuste de tipografía sp y monoespaciada) y archivos `.md` (con renderizado de títulos Markdown, listas, bloques de código y citas).

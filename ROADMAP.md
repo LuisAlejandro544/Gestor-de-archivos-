@@ -22,6 +22,7 @@ Este archivo documenta los hitos completados y la hoja de ruta para futuras vers
 - [x] Extracción en tiempo real del ícono original de aplicaciones y juegos desde archivos `.apk`.
 - [x] Sistema de temas y paletas de color (Verde Esmeralda, AMOLED Negro Puro, Material You Dinámico).
 - [x] Extensión nativa **ArchivoX Text** para lectura de archivos `.txt` y `.md` con descompresión e instalación de recursos dinámicos.
+- [x] Visor y explorador navegable 100% REAL del contenido de archivos `.zip`, `.7z`, `.tar.gz`, `.apk` y `.jar` con lectura en memoria de archivos de texto.
 - [x] Visor nativo de claves privadas y certificados PEM (`.pem`, `.key`, `.crt`, `.pub`, `.p8`).
 - [x] Automatización CI/CD con GitHub Actions (firma en caliente de APK Debug, caché de Gradle/Cargo y flujo de auto-descompresión ZIP con GitHub App Bot).
 

@@ -35,6 +35,7 @@ fun FileDetailsBottomSheet(
     onDeleteClick: () -> Unit,
     onCompressClick: () -> Unit,
     onExtractClick: () -> Unit,
+    onExploreZipClick: () -> Unit = {},
     onPemViewerClick: () -> Unit = {},
     onTextEditorClick: () -> Unit = {}
 ) {
@@ -158,6 +159,21 @@ fun FileDetailsBottomSheet(
                 if (item.fileType == FileType.ARCHIVE) {
                     Button(
                         onClick = {
+                            onDismiss()
+                            onExploreZipClick()
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag("action_explore_zip"),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                    ) {
+                        Icon(Icons.Default.FolderZip, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Explorar ZIP")
+                    }
+
+                    Button(
+                        onClick = {
                             onExtractClick()
                         },
                         modifier = Modifier
@@ -167,22 +183,22 @@ fun FileDetailsBottomSheet(
                     ) {
                         Icon(Icons.Default.Unarchive, contentDescription = null, modifier = Modifier.size(18.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Extraer Archivo")
+                        Text("Extraer")
                     }
-                }
-
-                Button(
-                    onClick = {
-                        onCompressClick()
-                    },
-                    modifier = Modifier
-                        .weight(1f)
-                        .testTag("action_compress"),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                ) {
-                    Icon(Icons.Default.FolderZip, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text("Comprimir (.zip/.rar)")
+                } else {
+                    Button(
+                        onClick = {
+                            onCompressClick()
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("action_compress"),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                    ) {
+                        Icon(Icons.Default.FolderZip, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("Comprimir (.zip/.rar)")
+                    }
                 }
             }
 
