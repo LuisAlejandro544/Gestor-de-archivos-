@@ -14,6 +14,11 @@ Un gestor de archivos y motor de compresión de alto rendimiento diseñado para 
   - **Kotlin Engine:** Manejo nativo resiliente de fallback `ZipOutputStream`/`ZipInputStream`.
 - **Extracción de Logos e Íconos de APKs Real:**
   - Decodificación y carga dinámica en tiempo real del ícono original de aplicaciones y juegos Android contenidas dentro de archivos `.apk`.
+- **Visor Nativo de Claves y Certificados PEM:**
+  - Visor especializado en tiempo real para archivos de seguridad `.pem`, `.key`, `.crt`, `.cer`, `.pub`, `.p8`.
+  - Detección automática de encabezados cryptographic (RSA PKCS#1, PKCS#8, EC, OpenSSH, Certificados X.509).
+  - Indicador visual de estado de cifrado (🔒 Cifrada / Libre), número de líneas, tamaño en bytes y huella digital SHA-256.
+  - Copia rápida en un toque de bloques Base64 puros o del archivo PEM completo.
 - **Personalización de Apariencia y Temas:**
   - **Verde Esmeralda (Clásico ZArchiver):** Tonalidades esmeralda con acentos amarillos para carpetas.
   - **Negro Puro (AMOLED):** Fondo totalmente negro (#000000) ideal para pantallas OLED y ahorro energético.
@@ -45,8 +50,9 @@ gradle :app:assembleDebug
 gradle :app:testDebugUnitTest
 ```
 
-### Compilación Automatizada (GitHub Actions)
-El repositorio cuenta con una acción de GitHub en `.github/workflows/android.yml` con activación manual (`workflow_dispatch`), caché activable de dependencias de Gradle/Cargo y generación de llave en caliente (`keytool`) para firmar automáticamente la APK Debug resultante.
+### Compilación Automatizada y Automatización CI/CD (GitHub Actions)
+- **Compilación de APK Debug (`.github/workflows/android.yml`):** Activación manual (`workflow_dispatch`), caché de Gradle/Cargo y generación de llave en caliente (`keytool`) para firmar automáticamente la APK.
+- **Reemplazo Automático de Código mediante ZIP (`.github/workflows/unpack_zip.yml`):** Acción activada al subir archivos `.zip` al repositorio o mediante `workflow_dispatch`. Extrae el código, sobreescribe el repositorio y realiza commit/push autenticado con una GitHub App (Bot personalizado con avatar y nombre configurable).
 
 ---
 

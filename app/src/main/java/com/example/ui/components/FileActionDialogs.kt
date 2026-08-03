@@ -34,11 +34,13 @@ fun FileDetailsBottomSheet(
     onRenameClick: () -> Unit,
     onDeleteClick: () -> Unit,
     onCompressClick: () -> Unit,
-    onExtractClick: () -> Unit
+    onExtractClick: () -> Unit,
+    onPemViewerClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val iconInfo = getFileIconAndColor(item.fileType, item.isDirectory)
     val apkIcon = if (item.fileType == FileType.APK) rememberApkIcon(context, item.path) else null
+    val isPemOrKey = item.extension.lowercase() in listOf("pem", "key", "crt", "cer", "pub", "p8", "keytool")
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -106,6 +108,26 @@ fun FileDetailsBottomSheet(
             DetailRow(label = "Lectura / Escritura", value = if (item.canRead && item.canWrite) "Sí / Sí" else "Restringido")
 
             Spacer(modifier = Modifier.height(16.dp))
+
+            // PEM Key / Certificate Viewer Button
+            if (isPemOrKey) {
+                Button(
+                    onClick = {
+                        onDismiss()
+                        onPemViewerClick()
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("action_view_pem"),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primaryContainer, contentColor = MaterialTheme.colorScheme.onPrimaryContainer)
+                ) {
+                    Icon(Icons.Default.VpnKey, contentDescription = null, modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Ver Clave / Certificado PEM", fontWeight = FontWeight.Bold)
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+            }
 
             // Compression & Extraction Actions (Multi-Core Native Engine C++/Rust)
             Row(

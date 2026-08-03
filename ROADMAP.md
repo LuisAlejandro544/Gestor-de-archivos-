@@ -18,7 +18,8 @@ Este archivo documenta los hitos completados y la hoja de ruta para futuras vers
 - [x] Consola de log en tiempo real y velocímetro (MB/s) durante procesos de compresión.
 - [x] Extracción en tiempo real del ícono original de aplicaciones y juegos desde archivos `.apk`.
 - [x] Sistema de temas y paletas de color (Verde Esmeralda ZArchiver, AMOLED Negro Puro, Material You Dinámico).
-- [x] Automatización CI/CD con GitHub Actions (firma en caliente de APK Debug y caché).
+- [x] Visor nativo de claves privadas y certificados PEM (`.pem`, `.key`, `.crt`, `.pub`, `.p8`) con inspector de tipos, huella SHA-256 y copia de Base64.
+- [x] Automatización CI/CD con GitHub Actions (firma en caliente de APK Debug, caché de Gradle/Cargo y flujo de auto-descompresión ZIP con GitHub App Bot personalizado).
 
 ## 🟡 Fase 3: Características Avanzadas de Archivo (PRÓXIMAMENTE)
 - [ ] Compresión protegida con contraseña mediante cifrado AES-256 en motor Rust.

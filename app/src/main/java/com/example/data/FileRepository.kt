@@ -104,7 +104,7 @@ class FileRepository(private val context: Context) {
             "mp4", "mkv", "avi", "mov", "webm", "3gp", "flv" -> FileType.VIDEO
             "mp3", "flac", "wav", "aac", "m4a", "ogg", "opus" -> FileType.AUDIO
             "pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt", "rtf", "epub", "csv" -> FileType.DOCUMENT
-            "kt", "java", "py", "js", "ts", "html", "css", "json", "xml", "sh", "c", "cpp", "gradle", "sql" -> FileType.CODE
+            "kt", "java", "py", "js", "ts", "html", "css", "json", "xml", "sh", "c", "cpp", "gradle", "sql", "pem", "key", "crt", "cer", "pub", "p8", "keytool" -> FileType.CODE
             "apk", "xapk", "apks" -> FileType.APK
             else -> FileType.UNKNOWN
         }
@@ -115,38 +115,13 @@ class FileRepository(private val context: Context) {
             if (!dir.exists()) {
                 dir.mkdirs()
             }
-            // Populate basic ZArchiver sample structure if directory is empty
+            // Ensure default system directories exist
             val defaultDirs = listOf("Download", "Documents", "Pictures", "Music", "Movies", "Android", "Backup_ZArchiver")
             for (d in defaultDirs) {
                 val subDir = File(dir, d)
                 if (!subDir.exists()) {
                     subDir.mkdirs()
                 }
-            }
-
-            // Create sample files in Download if empty
-            val downloadDir = File(dir, "Download")
-            if (downloadDir.listFiles()?.isEmpty() != false) {
-                File(downloadDir, "proyecto_android_v1.0.zip").createNewFile()
-                File(downloadDir, "manual_usuario_zarchiver.pdf").createNewFile()
-                File(downloadDir, "cancion_favorita.mp3").createNewFile()
-                File(downloadDir, "fotografia_paisaje.jpg").createNewFile()
-                File(downloadDir, "aplicacion_v2.apk").createNewFile()
-            }
-
-            // Create sample files in Documents
-            val docsDir = File(dir, "Documents")
-            if (docsDir.listFiles()?.isEmpty() != false) {
-                File(docsDir, "Notas_Importantes.txt").writeText("Lista de notas y tareas pendientes en Gestor de Archivos.")
-                File(docsDir, "Configuracion_Sistema.json").writeText("{\"theme\": \"dark\", \"view\": \"list\"}")
-                File(docsDir, "Resumen_Ejecutivo.docx").createNewFile()
-            }
-
-            // Create sample zip in Backup_ZArchiver
-            val backupDir = File(dir, "Backup_ZArchiver")
-            if (backupDir.listFiles()?.isEmpty() != false) {
-                File(backupDir, "Copia_Seguridad_2026.7z").createNewFile()
-                File(backupDir, "Datos_Respaldados.tar.gz").createNewFile()
             }
         } catch (e: Exception) {
             e.printStackTrace()

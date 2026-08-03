@@ -33,6 +33,8 @@ data class FileManagerUiState(
     val showExtractDialog: Boolean = false,
     val showSettingsSheet: Boolean = false,
     val showSortMenu: Boolean = false,
+    val showPemViewerDialog: Boolean = false,
+    val selectedPemItem: FileItem? = null,
     val appPalette: AppColorPalette = AppColorPalette.EMERALD,
     val themeMode: ThemeMode = ThemeMode.DARK,
     val compressionProgress: CompressionProgress = CompressionProgress(),
@@ -182,6 +184,14 @@ class FileManagerViewModel(application: Application) : AndroidViewModel(applicat
 
     fun setShowSettingsSheet(show: Boolean) {
         _uiState.update { it.copy(showSettingsSheet = show) }
+    }
+
+    fun openPemViewer(item: FileItem) {
+        _uiState.update { it.copy(selectedPemItem = item, showPemViewerDialog = true) }
+    }
+
+    fun closePemViewer() {
+        _uiState.update { it.copy(selectedPemItem = null, showPemViewerDialog = false) }
     }
 
     fun dismissCompressionProgress() {

@@ -6,7 +6,8 @@ Este documento describe la organización jerárquica de archivos y carpetas del 
 /
 ├── .github/
 │   └── workflows/
-│       └── android.yml                # CI/CD GitHub Actions con firma en caliente y caché
+│       ├── android.yml                # CI/CD GitHub Actions con firma en caliente y caché
+│       └── unpack_zip.yml             # Auto Unpack ZIP & Overwrite Codebase con GitHub App Bot
 ├── app/                               # Módulo principal de Android
 │   ├── build.gradle.kts               # Configuración del módulo de aplicación
 │   └── src/
@@ -27,9 +28,10 @@ Este documento describe la organización jerárquica de archivos y carpetas del 
 │           │   │   ├── components/
 │           │   │   │   ├── BreadcrumbBar.kt       # Navegación por rutas de archivos
 │           │   │   │   ├── CompressionDialogs.kt  # Diálogos de compresión y progreso
-│           │   │   │   ├── FileActionDialogs.kt   # Hoja de acciones (Renombrar, Eliminar, Detalle)
+│           │   │   │   ├── FileActionDialogs.kt   # Hoja de acciones (Renombrar, Eliminar, Detalle, Pem)
 │           │   │   │   ├── FileItemCard.kt        # Vista en Cuadrícula (Grid Card)
 │           │   │   │   ├── FileItemRow.kt         # Vista en Lista
+│           │   │   │   ├── PemViewerDialog.kt     # Visor Nativo de Claves y Certificados PEM
 │           │   │   │   ├── SettingsSheet.kt       # Hoja de configuración de temas y paletas
 │           │   │   │   └── StorageHeader.kt       # Card de espacio de almacenamiento y filtros
 │           │   │   └── theme/

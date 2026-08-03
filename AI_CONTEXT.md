@@ -35,5 +35,10 @@ Este archivo proporciona contexto técnico profundo a modelos de lenguaje (LLMs)
    - La clase `NativeArchiveEngine` emite estados mediante callbacks de `CompressionProgress`.
    - La barra de progreso de compresión muestra velocidad en MB/s, hilo secundario activo asignado y logs detallados estilo consola.
 
-4. **Identificadores y TestTags:**
+4. **Visor Nativo de Claves y Certificados PEM (`PemViewerDialog.kt`):**
+   - Manejo especializado de archivos `.pem`, `.key`, `.crt`, `.cer`, `.pub`, `.p8`.
+   - Inspección sintáctica sin alterar la codificación original ni requerir renombrado a `.txt`.
+   - Cálculo de huella digital SHA-256 en memoria, aislamiento de bloque Base64 y copia directa al portapapeles.
+
+5. **Identificadores y TestTags:**
    - Se deben mantener las etiquetas `Modifier.testTag("...")` en los botones y campos interactivos clave para soportar pruebas automatizadas y localización de componentes por agentes de IA.

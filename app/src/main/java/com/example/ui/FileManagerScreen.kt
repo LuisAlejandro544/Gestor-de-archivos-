@@ -324,6 +324,8 @@ fun FileManagerScreen(
                                     onClick = {
                                         if (item.isDirectory) {
                                             viewModel.navigateTo(item.path)
+                                        } else if (item.extension.lowercase() in listOf("pem", "key", "crt", "cer", "pub", "p8", "keytool")) {
+                                            viewModel.openPemViewer(item)
                                         } else {
                                             viewModel.selectItemForAction(item)
                                         }
@@ -348,6 +350,8 @@ fun FileManagerScreen(
                                     onClick = {
                                         if (item.isDirectory) {
                                             viewModel.navigateTo(item.path)
+                                        } else if (item.extension.lowercase() in listOf("pem", "key", "crt", "cer", "pub", "p8", "keytool")) {
+                                            viewModel.openPemViewer(item)
                                         } else {
                                             viewModel.selectItemForAction(item)
                                         }
@@ -378,7 +382,8 @@ fun FileManagerScreen(
                 onRenameClick = { viewModel.setShowRenameDialog(true) },
                 onDeleteClick = { viewModel.setShowDeleteDialog(true) },
                 onCompressClick = { viewModel.setShowCompressDialog(true) },
-                onExtractClick = { viewModel.setShowExtractDialog(true) }
+                onExtractClick = { viewModel.setShowExtractDialog(true) },
+                onPemViewerClick = { viewModel.openPemViewer(item) }
             )
         }
     }
@@ -449,6 +454,14 @@ fun FileManagerScreen(
             itemName = uiState.selectedItem!!.name,
             onDismiss = { viewModel.setShowDeleteDialog(false) },
             onConfirmDelete = { viewModel.deleteSelectedItem() }
+        )
+    }
+
+    // Native PEM Key / Certificate Viewer Dialog
+    if (uiState.showPemViewerDialog && uiState.selectedPemItem != null) {
+        PemViewerDialog(
+            item = uiState.selectedPemItem!!,
+            onDismiss = { viewModel.closePemViewer() }
         )
     }
 }
