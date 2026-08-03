@@ -1,0 +1,74 @@
+name: Auto Unpack ZIP & Overwrite Codebase
+
+on:
+  push:
+    paths:
+      - '**.zip'
+  workflow_dispatch:
+    inputs:
+      zip_filename:
+        description: 'Nombre del archivo .zip en la raíz (ejemplo: update.zip)'
+        required: false
+        default: 'app_update.zip'
+
+jobs:
+  unpack_and_replace:
+    name: Extraer ZIP y Reemplazar Código Fuente
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repositorio
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Obtener Token de GitHub App (Bot Personalizado)
+        id: app-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.BOT_APP_ID }}
+          private-key: ${{ secrets.BOT_PRIVATE_KEY }}
+
+      - name: Localizar y Extraer Archivo ZIP
+        run: |
+          # Buscar si se especificó por workflow_dispatch o encontrar el primer zip subido
+          ZIP_FILE=""
+          if [ -n "${{ github.event.inputs.zip_filename }}" ] && [ -f "${{ github.event.inputs.zip_filename }}" ]; then
+            ZIP_FILE="${{ github.event.inputs.zip_filename }}"
+          else
+            ZIP_FILE=$(find . -maxdepth 2 -name "*.zip" ! -path "./.git/*" | head -n 1)
+          fi
+
+          if [ -z "$ZIP_FILE" ] || [ ! -f "$ZIP_FILE" ]; then
+            echo "❌ No se encontró ningún archivo .zip para descomprimir."
+            exit 1
+          fi
+
+          echo "📦 Archivo ZIP localizado: $ZIP_FILE"
+          echo "📂 Descomprimiendo y reemplazando código fuente..."
+
+          # Descomprimir sobreescribiendo en la raíz
+          unzip -o "$ZIP_FILE" -d .
+
+          # Eliminar el archivo .zip para que no quede en el repositorio
+          rm -f "$ZIP_FILE"
+
+          echo "✅ Código reemplazado correctamente."
+
+      - name: Configurar Firma de Git con el Bot Personalizado
+        run: |
+          # Configuración del usuario Git para que las descripciones y foto correspondan al Bot
+          git config user.name "${{ secrets.BOT_NAME || 'ZArchiver AutoBot' }}"
+          git config user.email "${{ secrets.BOT_APP_ID }}+${{ secrets.BOT_NAME || 'zarchiver-bot' }}[bot]@users.noreply.github.com"
+
+      - name: Commit y Push de los Cambios Reemplazados
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          git add -A
+          if git diff --staged --quiet; then
+            echo "No hay cambios para confirmar."
+          else
+            git commit -m "refactor: reemplazo automático de código fuente desde archivo ZIP [skip ci]"
+            git push origin HEAD:${{ github.ref_name }}
+          fi

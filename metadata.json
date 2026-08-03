@@ -1,0 +1,6 @@
+{
+  "name": "Gestor de Archivos",
+  "description": "Navegador y gestor de archivos para Android estilo ZArchiver para explorar carpetas, ver detalles y navegar por el almacenamiento interno.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
