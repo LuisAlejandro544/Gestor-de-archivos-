@@ -39,7 +39,7 @@ fun FileDetailsBottomSheet(
     onTextEditorClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
-    val iconInfo = getFileIconAndColor(item.fileType, item.isDirectory)
+    val iconInfo = getFileIconAndColor(item.fileType, item.isDirectory, item.extension)
     val apkIcon = if (item.fileType == FileType.APK) rememberApkIcon(context, item.path) else null
     val isPemOrKey = item.extension.lowercase() in listOf("pem", "key", "crt", "cer", "pub", "p8", "keytool")
     val isTextOrMd = item.extension.lowercase() in listOf("txt", "md") || item.fileType == FileType.DOCUMENT

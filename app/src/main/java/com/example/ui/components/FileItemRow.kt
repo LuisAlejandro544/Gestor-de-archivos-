@@ -52,7 +52,14 @@ fun FileItemRow(
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Colored File / Folder Icon Badge or real APK logo
-            val iconInfo = getFileIconAndColor(item.fileType, item.isDirectory)
+            val iconInfo = getFileIconAndColor(item.fileType, item.isDirectory, item.extension)
+            val extLower = item.extension.lowercase()
+            val badgeColor = when (extLower) {
+                "txt" -> Color(0xFF0288D1)
+                "md" -> Color(0xFF673AB7)
+                else -> null
+            }
+
             Box(
                 modifier = Modifier
                     .size(44.dp)
@@ -84,16 +91,37 @@ fun FileItemRow(
             Column(
                 modifier = Modifier.weight(1f)
             ) {
-                Text(
-                    text = item.name,
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        fontWeight = if (item.isDirectory) FontWeight.SemiBold else FontWeight.Normal,
-                        fontSize = 15.sp
-                    ),
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = item.name,
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            fontWeight = if (item.isDirectory) FontWeight.SemiBold else FontWeight.Normal,
+                            fontSize = 15.sp
+                        ),
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier.weight(1f, fill = false)
+                    )
+
+                    if (badgeColor != null) {
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Surface(
+                            color = badgeColor.copy(alpha = 0.18f),
+                            shape = RoundedCornerShape(6.dp)
+                        ) {
+                            Text(
+                                text = extLower.uppercase(),
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontWeight = FontWeight.ExtraBold,
+                                    fontSize = 10.sp
+                                ),
+                                color = badgeColor,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                            )
+                        }
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(2.dp))
 
@@ -139,9 +167,16 @@ fun FileItemRow(
     }
 }
 
-fun getFileIconAndColor(fileType: FileType, isDirectory: Boolean): Pair<ImageVector, Color> {
+fun getFileIconAndColor(fileType: FileType, isDirectory: Boolean, extension: String = ""): Pair<ImageVector, Color> {
     if (isDirectory) {
         return Pair(Icons.Default.Folder, fileType.color)
+    }
+    val ext = extension.lowercase()
+    if (ext == "txt") {
+        return Pair(Icons.Default.TextSnippet, Color(0xFF0288D1)) // Clean Cyan/Blue for TXT
+    }
+    if (ext == "md") {
+        return Pair(Icons.Default.EditNote, Color(0xFF673AB7)) // Markdown Purple for MD
     }
     return when (fileType) {
         FileType.ARCHIVE -> Pair(Icons.Default.FolderZip, fileType.color)

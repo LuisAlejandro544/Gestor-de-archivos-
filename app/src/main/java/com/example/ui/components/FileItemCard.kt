@@ -17,6 +17,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -32,8 +33,14 @@ fun FileItemCard(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    val iconInfo = getFileIconAndColor(item.fileType, item.isDirectory)
+    val iconInfo = getFileIconAndColor(item.fileType, item.isDirectory, item.extension)
     val apkIcon = if (item.fileType == FileType.APK) rememberApkIcon(context, item.path) else null
+    val extLower = item.extension.lowercase()
+    val badgeColor = when (extLower) {
+        "txt" -> Color(0xFF0288D1)
+        "md" -> Color(0xFF673AB7)
+        else -> null
+    }
 
     Card(
         modifier = modifier
@@ -96,17 +103,41 @@ fun FileItemCard(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            Text(
-                text = item.name,
-                style = MaterialTheme.typography.bodyMedium.copy(
-                    fontWeight = if (item.isDirectory) FontWeight.SemiBold else FontWeight.Medium,
-                    fontSize = 13.sp
-                ),
-                color = MaterialTheme.colorScheme.onSurface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                textAlign = TextAlign.Center
-            )
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = item.name,
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontWeight = if (item.isDirectory) FontWeight.SemiBold else FontWeight.Medium,
+                        fontSize = 13.sp
+                    ),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.weight(1f, fill = false)
+                )
+
+                if (badgeColor != null) {
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Surface(
+                        color = badgeColor.copy(alpha = 0.18f),
+                        shape = RoundedCornerShape(4.dp)
+                    ) {
+                        Text(
+                            text = extLower.uppercase(),
+                            style = MaterialTheme.typography.labelSmall.copy(
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 9.sp
+                            ),
+                            color = badgeColor,
+                            modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                        )
+                    }
+                }
+            }
 
             Spacer(modifier = Modifier.height(2.dp))
 
