@@ -3,18 +3,21 @@ name: Auto Unpack ZIP & Overwrite Codebase
 on:
   push:
     paths:
-      - '**.zip'
+      - 'zip/**.zip'
+      - 'zip/*.zip'
   workflow_dispatch:
     inputs:
       zip_filename:
-        description: 'Nombre del archivo .zip en la raíz (ejemplo: update.zip)'
+        description: 'Ruta del archivo .zip (ejemplo: zip/codigo.zip)'
         required: false
-        default: 'app_update.zip'
+        default: 'zip/update.zip'
 
 jobs:
   unpack_and_replace:
     name: Extraer ZIP y Reemplazar Código Fuente
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout Repositorio
@@ -31,39 +34,45 @@ jobs:
 
       - name: Localizar y Extraer Archivo ZIP
         run: |
-          # Buscar si se especificó por workflow_dispatch o encontrar el primer zip subido
+          # Buscar si se especificó por workflow_dispatch o encontrar el primer zip en la carpeta zip/
           ZIP_FILE=""
           if [ -n "${{ github.event.inputs.zip_filename }}" ] && [ -f "${{ github.event.inputs.zip_filename }}" ]; then
             ZIP_FILE="${{ github.event.inputs.zip_filename }}"
-          else
+          elif [ -d "zip" ]; then
+            ZIP_FILE=$(find zip -maxdepth 2 -name "*.zip" | head -n 1)
+          fi
+
+          # Fallback si se subió a otro nivel
+          if [ -z "$ZIP_FILE" ]; then
             ZIP_FILE=$(find . -maxdepth 2 -name "*.zip" ! -path "./.git/*" | head -n 1)
           fi
 
           if [ -z "$ZIP_FILE" ] || [ ! -f "$ZIP_FILE" ]; then
-            echo "❌ No se encontró ningún archivo .zip para descomprimir."
+            echo "❌ No se encontró ningún archivo .zip en la carpeta 'zip/' para descomprimir."
             exit 1
           fi
 
           echo "📦 Archivo ZIP localizado: $ZIP_FILE"
-          echo "📂 Descomprimiendo y reemplazando código fuente..."
+          echo "📂 Descomprimiendo y reemplazando código fuente en el directorio raíz..."
 
           # Descomprimir sobreescribiendo en la raíz
           unzip -o "$ZIP_FILE" -d .
 
-          # Eliminar el archivo .zip para que no quede en el repositorio
+          # Eliminar el archivo .zip procesado para mantener el repositorio limpio
           rm -f "$ZIP_FILE"
 
           echo "✅ Código reemplazado correctamente."
 
-      - name: Configurar Firma de Git con el Bot Personalizado
+      - name: Configurar Firma y Autenticación de Git
         run: |
-          # Configuración del usuario Git para que las descripciones y foto correspondan al Bot
+          TOKEN="${{ steps.app-token.outputs.token }}"
+          if [ -n "$TOKEN" ]; then
+            git remote set-url origin "https://x-access-token:${TOKEN}@github.com/${{ github.repository }}.git"
+          fi
           git config user.name "${{ secrets.BOT_NAME || 'ZArchiver AutoBot' }}"
-          git config user.email "${{ secrets.BOT_APP_ID }}+${{ secrets.BOT_NAME || 'zarchiver-bot' }}[bot]@users.noreply.github.com"
+          git config user.email "${{ secrets.BOT_APP_ID || '123456' }}+${{ secrets.BOT_NAME || 'zarchiver-bot' }}[bot]@users.noreply.github.com"
 
       - name: Commit y Push de los Cambios Reemplazados
-        env:
-          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           git add -A
           if git diff --staged --quiet; then

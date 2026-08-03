@@ -1,0 +1,3 @@
+# Directorio reservado para subir archivos .zip
+# Cada vez que subas un archivo .zip a esta carpeta, GitHub Actions lo descomprimirá
+# automáticamente y reemplazará todo el código de la aplicación.

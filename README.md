@@ -52,7 +52,7 @@ gradle :app:testDebugUnitTest
 
 ### Compilación Automatizada y Automatización CI/CD (GitHub Actions)
 - **Compilación de APK Debug (`.github/workflows/android.yml`):** Activación manual (`workflow_dispatch`), caché de Gradle/Cargo y generación de llave en caliente (`keytool`) para firmar automáticamente la APK.
-- **Reemplazo Automático de Código mediante ZIP (`.github/workflows/unpack_zip.yml`):** Acción activada al subir archivos `.zip` al repositorio o mediante `workflow_dispatch`. Extrae el código, sobreescribe el repositorio y realiza commit/push autenticado con una GitHub App (Bot personalizado con avatar y nombre configurable).
+- **Reemplazo Automático de Código mediante ZIP (`.github/workflows/unpack_zip.yml`):** Acción activada automáticamente al subir un archivo `.zip` dentro de la carpeta `/zip`. Extrae el código contenido en el `.zip`, sobreescribe la raíz del proyecto y realiza commit/push autenticado con tu GitHub App (Bot personalizado con avatar y nombre asignado).
 
 ---
 

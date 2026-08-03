@@ -45,6 +45,8 @@ Este documento describe la organización jerárquica de archivos y carpetas del 
 │   ├── Cargo.toml                     # Configuración de librerías Cargo (JNI, Rayon, Flate2)
 │   └── src/
 │       └── lib.rs                     # Implementación JNI en Rust con paralelismo Rayon
+├── zip/                               # Carpeta especial para auto-descomprimir código fuente (.zip)
+│   └── .gitkeep
 ├── build.gradle.kts                   # Build gradle raíz del proyecto
 ├── settings.gradle.kts                # Inclusión de proyectos y repositorios
 ├── metadata.json                      # Metadatos para la plataforma AI Studio
