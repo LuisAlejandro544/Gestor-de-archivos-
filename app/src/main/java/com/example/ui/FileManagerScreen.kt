@@ -254,8 +254,8 @@ fun FileManagerScreen(
         CompressFileDialog(
             defaultName = uiState.selectedItem!!.name.substringBeforeLast("."),
             onDismiss = { viewModel.setShowCompressDialog(false) },
-            onCompress = { targetName, format, level, cores, password ->
-                viewModel.compressSelectedItem(targetName, format, level, cores, password)
+            onCompress = { targetName, format, level, cores, password, splitSizeMb ->
+                viewModel.compressSelectedItem(targetName, format, level, cores, password, splitSizeMb)
             }
         )
     }

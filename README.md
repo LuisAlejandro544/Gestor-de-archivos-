@@ -12,10 +12,22 @@ Un gestor de archivos y motor de compresión de alto rendimiento diseñado para 
   - Previsualización en tiempo real de archivos de texto (`.txt`, `.json`, `.kt`, `.java`, `.md`, `.xml`, `.gradle`, `.sql`) leídos directamente desde la memoria RAM del archivo ZIP.
   - Búsqueda interna filtrada de elementos dentro del archivo comprimido.
   - Compatible con formatos `.zip`, `.7z`, `.tar.gz`, `.apk`, `.jar`, `.xapk` y archivos cifrados con contraseña AES-256.
-- **Extensión Nativa ArchivoX Text (.txt / .md):**
-  - Módulo de extensión ligero de instalación dinámica con pantalla de carga: *"Descargando y descomprimiendo archivos esenciales"*.
-  - Lectura completa de archivos `.txt` (con numeración de líneas, ajuste de tipografía sp y monoespaciada) y archivos `.md` (con renderizado de títulos Markdown, listas, bloques de código y citas).
-  - Búsqueda interna con resaltado de coincidencias en tiempo real y contador de palabras/caracteres.
+- **Editor y Visor en Pantalla Completa ArchivoX Text v1.2 (.txt / .md / .json):**
+  - Editor y visor independiente en pantalla completa (independiente de diálogos flotantes) para lectura y edición en tiempo real de archivos `.txt`, `.md` y `.json`.
+  - Soporte exclusivo para archivos `.json` con renderizado resaltado sintáctico (claves en dorado, cadenas en verde, números y booleanos en violeta), insignia de validación de sintaxis en tiempo real (`✓ JSON Válido` / `⚠️ Sintaxis Errónea`) y botón de formateo automático (Indent 2 espacios).
+  - Modo Edición con guardado directo en almacenamiento local, indicador visual de cambios no guardados y prevención de pérdidas.
+  - Alternancia fluida entre Modo Lectura (con renderizado de Markdown enriquecido, JSON estructurado o texto plano con numeración de líneas) y Modo Editor.
+  - Barra de estado inferior con contadores en tiempo real de líneas, palabras, caracteres y tipo de codificación (UTF-8).
+  - Herramientas de ajuste tipográfico (tamaño de fuente en sp, fuente monoespaciada/sans), búsqueda con resaltado de coincidencias y copiado al portapapeles.
+- **Compresión con Partición en Partes (Split Volumes) y Opciones Avanzadas:**
+  - Menú de opciones avanzadas mediante clic mantenido (Long Press) en archivos `.zip` y demás formatos.
+  - Opción de dividir compresión en múltiples volumenes (10MB, 50MB, 100MB, 700MB) almacenando las partes (`.zip.part001`, `.part002`) en una carpeta especial creada automáticamente (`_partes`).
+- **Íconos Vectoriales Exclusivos:**
+  - Íconos y badges de color personalizados y exclusivos para archivos de datos `.json`.
+- **Diseño de Interfaz Minimalista y Ultraligero:**
+  - Rediseño refinado de la lista de archivos (`FileItemRow`) con menor densidad visual, filas compactas e íconos estilizados de 38dp.
+  - Tarjeta de almacenamiento (`StorageHeader`) y barra de migas de pan (`BreadcrumbBar`) integradas con acabado limpio y plano.
+  - Botón de Acción Flotante (FAB) estilizado en formato circular sutil.
 - **Cifrado Militar AES-256 en Archivos ZIP:**
   - Compresión de archivos ZIP 100% funcional con protección opcional mediante clave segura y cifrado de 256 bits AES.
   - Extracción transparente de archivos comprimidos cifrados con verificación de contraseña.

@@ -19,6 +19,7 @@ Este documento describe la organización jerárquica de archivos y carpetas del 
 │           ├── java/com/example/
 │           │   ├── MainActivity.kt    # Entry Point con permisos runtime Android R+
 │           │   ├── data/
+│           │   │   ├── CompressionModels.kt # Enums y Data Class (CompressionFormat, CompressionLevel, CompressionProgress)
 │           │   │   ├── FileItem.kt    # Modelo de datos para archivos y carpetas
 │           │   │   ├── FileRepository.kt # Repositorio de lectura y operaciones I/O
 │           │   │   ├── NativeArchiveEngine.kt # Motor JNI / Zip4j AES-256 / Coroutines C++ y Rust
@@ -27,7 +28,7 @@ Este documento describe la organización jerárquica de archivos y carpetas del 
 │           │   │   ├── FileManagerViewModel.kt # ViewModel principal y UI State
 │           │   │   ├── FileManagerScreen.kt    # Composable raíz de la interfaz ArchivoX
 │           │   │   ├── components/
-│           │   │   │   ├── ArchivoXTextViewerDialog.kt # Diálogo visor de archivos TXT y MD (Extensión ArchivoX Text)
+│           │   │   │   ├── ArchivoXTextViewerDialog.kt # Editor y visor en pantalla completa de archivos TXT y MD
 │           │   │   │   ├── BreadcrumbBar.kt       # Navegación por rutas de archivos
 │           │   │   │   ├── CompressFileDialog.kt  # Diálogo de compresión con opciones de formato, nivel y clave AES-256
 │           │   │   │   ├── CompressionProgressDialog.kt # Diálogo modal con consola de logs de compresión en tiempo real
@@ -40,8 +41,11 @@ Este documento describe la organización jerárquica de archivos y carpetas del 
 │           │   │   │   ├── PemViewerDialog.kt     # Visor Nativo de Claves y Certificados PEM
 │           │   │   │   ├── SettingsSheet.kt       # Hoja de configuración de temas y paletas
 │           │   │   │   ├── StorageHeader.kt       # Card de espacio de almacenamiento y filtros
+│           │   │   │   ├── TextEditorControlBar.kt # Barra de controles y ajustes tipográficos para el visor/editor
 │           │   │   │   ├── TextExtensionInstallDialog.kt # Diálogo modal de instalación del módulo de extensión ArchivoX Text
+│           │   │   │   ├── TextMode.kt            # Enum de modo de lectura/edición (PREVIEW, EDIT)
 │           │   │   │   ├── TextRenderers.kt       # Renderizadores de texto plano con numeración de líneas y Markdown
+│           │   │   │   ├── ZipEntryRow.kt         # Fila e íconos para elementos dentro de archivos comprimidos
 │           │   │   │   └── ZipExplorerDialog.kt    # Diálogo modal de navegación y exploración interna de archivos .ZIP/7Z/APK
 │           │   │   └── theme/
 │           │   │       ├── Color.kt               # Paletas Verde Esmeralda, AMOLED y Light

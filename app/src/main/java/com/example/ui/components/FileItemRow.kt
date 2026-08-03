@@ -1,8 +1,9 @@
 package com.example.ui.components
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -25,6 +26,7 @@ import com.example.data.FileItem
 import com.example.data.FileType
 import com.example.util.rememberApkIcon
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun FileItemRow(
     item: FileItem,
@@ -39,7 +41,10 @@ fun FileItemRow(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
-            .clickable { onClick() }
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = onOptionClick
+            )
             .testTag("file_row_${item.name}"),
         color = Color.Transparent
     ) {
@@ -55,6 +60,7 @@ fun FileItemRow(
             val badgeColor = when (extLower) {
                 "txt" -> Color(0xFF0288D1)
                 "md" -> Color(0xFF673AB7)
+                "json" -> Color(0xFFF59E0B)
                 else -> null
             }
 
@@ -176,6 +182,9 @@ fun getFileIconAndColor(fileType: FileType, isDirectory: Boolean, extension: Str
     if (ext == "md") {
         return Pair(Icons.Default.EditNote, Color(0xFF673AB7)) // Markdown Purple for MD
     }
+    if (ext == "json" || fileType == FileType.JSON) {
+        return Pair(Icons.Default.DataObject, Color(0xFFF59E0B)) // Exclusive DataObject vector for JSON
+    }
     return when (fileType) {
         FileType.ARCHIVE -> Pair(Icons.Default.FolderZip, fileType.color)
         FileType.IMAGE -> Pair(Icons.Default.Image, fileType.color)
@@ -184,6 +193,7 @@ fun getFileIconAndColor(fileType: FileType, isDirectory: Boolean, extension: Str
         FileType.DOCUMENT -> Pair(Icons.Default.Description, fileType.color)
         FileType.CODE -> Pair(Icons.Default.Code, fileType.color)
         FileType.APK -> Pair(Icons.Default.Android, fileType.color)
+        FileType.JSON -> Pair(Icons.Default.DataObject, Color(0xFFF59E0B))
         FileType.UNKNOWN, FileType.FOLDER -> Pair(Icons.Default.InsertDriveFile, fileType.color)
     }
 }

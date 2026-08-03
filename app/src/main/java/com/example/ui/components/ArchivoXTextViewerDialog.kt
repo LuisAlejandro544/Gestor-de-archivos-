@@ -37,11 +37,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 
-enum class TextMode {
-    PREVIEW,
-    EDIT
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ArchivoXTextViewerDialog(
@@ -90,7 +85,21 @@ fun ArchivoXTextViewerDialog(
         isLoading = false
     }
 
-    // Save File logic
+    // Format JSON function
+    fun formatJsonContent() {
+        try {
+            val trimmed = editableContent.trim()
+            val formatted = if (trimmed.startsWith("[")) {
+                org.json.JSONArray(trimmed).toString(2)
+            } else {
+                org.json.JSONObject(trimmed).toString(2)
+            }
+            editableContent = formatted
+            Toast.makeText(context, "¡JSON Formateado!", Toast.LENGTH_SHORT).show()
+        } catch (e: Exception) {
+            Toast.makeText(context, "Error al formatear JSON: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
+        }
+    }
     fun saveFile() {
         if (isSaving) return
         isSaving = true
@@ -292,94 +301,19 @@ fun ArchivoXTextViewerDialog(
                         .padding(horizontal = 12.dp)
                 ) {
                     // Control Header Toolbar (Mode selector & font controls)
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 6.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        // Mode Switcher (Lectura / Editor)
-                        SingleChoiceSegmentedButtonRow {
-                            SegmentedButton(
-                                selected = currentMode == TextMode.PREVIEW,
-                                onClick = { currentMode = TextMode.PREVIEW },
-                                shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2)
-                            ) {
-                                Icon(Icons.Default.Visibility, contentDescription = null, modifier = Modifier.size(14.dp))
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text("Lectura", fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
-                            }
-
-                            SegmentedButton(
-                                selected = currentMode == TextMode.EDIT,
-                                onClick = { currentMode = TextMode.EDIT },
-                                shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2)
-                            ) {
-                                Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(14.dp))
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text("Editor", fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
-                            }
-                        }
-
-                        // Right-side controls (Markdown toggle & font adjustments)
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            if (item.extension.lowercase() == "md" && currentMode == TextMode.PREVIEW) {
-                                FilterChip(
-                                    selected = isMarkdownRenderMode,
-                                    onClick = { isMarkdownRenderMode = !isMarkdownRenderMode },
-                                    label = {
-                                        Text(
-                                            text = if (isMarkdownRenderMode) "Markdown" else "Plano",
-                                            fontSize = 10.sp,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                    },
-                                    leadingIcon = {
-                                        Icon(
-                                            imageVector = if (isMarkdownRenderMode) Icons.Default.AutoAwesome else Icons.Default.Code,
-                                            contentDescription = null,
-                                            modifier = Modifier.size(12.dp)
-                                        )
-                                    }
-                                )
-                            }
-
-                            IconButton(
-                                onClick = { isMonospace = !isMonospace },
-                                modifier = Modifier.size(32.dp)
-                            ) {
-                                Icon(
-                                    imageVector = if (isMonospace) Icons.Default.FontDownload else Icons.Default.TextFields,
-                                    contentDescription = "Fuente Mono/Sans",
-                                    tint = if (isMonospace) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            }
-
-                            IconButton(
-                                onClick = { if (fontSizeSp > 10) fontSizeSp -= 2 },
-                                modifier = Modifier.size(28.dp)
-                            ) {
-                                Text("-", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                            }
-
-                            Text(
-                                text = "${fontSizeSp}sp",
-                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                            )
-
-                            IconButton(
-                                onClick = { if (fontSizeSp < 32) fontSizeSp += 2 },
-                                modifier = Modifier.size(28.dp)
-                            ) {
-                                Text("+", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                            }
-                        }
-                    }
+                    TextEditorControlBar(
+                        currentMode = currentMode,
+                        onModeChange = { currentMode = it },
+                        fileExtension = item.extension,
+                        isMarkdownRenderMode = isMarkdownRenderMode,
+                        onMarkdownToggle = { isMarkdownRenderMode = !isMarkdownRenderMode },
+                        isMonospace = isMonospace,
+                        onMonospaceToggle = { isMonospace = !isMonospace },
+                        fontSizeSp = fontSizeSp,
+                        onDecreaseFontSize = { if (fontSizeSp > 10) fontSizeSp -= 2 },
+                        onIncreaseFontSize = { if (fontSizeSp < 32) fontSizeSp += 2 },
+                        onFormatJson = { formatJsonContent() }
+                    )
 
                     // Optional Search Bar Input
                     AnimatedVisibility(visible = isSearchVisible) {
@@ -457,7 +391,14 @@ fun ArchivoXTextViewerDialog(
                                                 .fillMaxSize()
                                                 .verticalScroll(scrollState)
                                         ) {
-                                            if (isMarkdownRenderMode && item.extension.lowercase() == "md") {
+                                            if (item.extension.lowercase() == "json") {
+                                                RenderJsonContent(
+                                                    content = editableContent,
+                                                    searchQuery = searchQuery,
+                                                    fontSizeSp = fontSizeSp,
+                                                    isMonospace = isMonospace
+                                                )
+                                            } else if (isMarkdownRenderMode && item.extension.lowercase() == "md") {
                                                 RenderMarkdownContent(
                                                     content = editableContent,
                                                     searchQuery = searchQuery,

@@ -21,7 +21,13 @@ Este archivo documenta los hitos completados y la hoja de ruta para futuras vers
 - [x] Consola de log en tiempo real y velocímetro (MB/s) durante procesos de compresión.
 - [x] Extracción en tiempo real del ícono original de aplicaciones y juegos desde archivos `.apk`.
 - [x] Sistema de temas y paletas de color (Verde Esmeralda, AMOLED Negro Puro, Material You Dinámico).
-- [x] Extensión nativa **ArchivoX Text** para lectura de archivos `.txt` y `.md` con descompresión e instalación de recursos dinámicos.
+- [x] Extensión nativa **ArchivoX Text v1.2** con editor y visor independiente en pantalla completa para archivos `.txt`, `.md` y `.json` con persistencia de cambios en almacenamiento local.
+- [x] Soporte exclusivo para `.json`: resaltado sintáctico de claves/valores, validación de sintaxis en tiempo real y formateo/indentación automática.
+- [x] Íconos vectoriales personalizados y exclusivos con badges para archivos `.json`.
+- [x] Menú de opciones avanzadas por pulsación prolongada (Long Press) en archivos `.zip` y demás formatos.
+- [x] División de archivos comprimidos en múltiples volúmenes (Split Volumes de 10MB, 50MB, 100MB, 700MB) almacenando las partes en carpetas dedicadas (`_partes`).
+- [x] Alternancia entre Modo Lectura y Modo Edición con contadores en tiempo real (líneas, palabras, caracteres) y controles de fuente.
+- [x] Refinamiento de UI minimalista: reducción de densidad en filas de archivos (`FileItemRow`), tarjetas de almacenamiento sutiles y migas de pan impecables.
 - [x] Visor y explorador navegable 100% REAL del contenido de archivos `.zip`, `.7z`, `.tar.gz`, `.apk` y `.jar` con lectura en memoria de archivos de texto.
 - [x] Visor nativo de claves privadas y certificados PEM (`.pem`, `.key`, `.crt`, `.pub`, `.p8`).
 - [x] Automatización CI/CD con GitHub Actions (firma en caliente de APK Debug, caché de Gradle/Cargo y flujo de auto-descompresión ZIP con GitHub App Bot).

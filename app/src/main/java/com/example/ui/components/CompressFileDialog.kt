@@ -27,7 +27,7 @@ import com.example.data.CompressionLevel
 fun CompressFileDialog(
     defaultName: String,
     onDismiss: () -> Unit,
-    onCompress: (String, CompressionFormat, CompressionLevel, Int, String?) -> Unit
+    onCompress: (String, CompressionFormat, CompressionLevel, Int, String?, Int) -> Unit
 ) {
     var fileName by remember { mutableStateOf(defaultName) }
     var password by remember { mutableStateOf("") }
@@ -35,6 +35,7 @@ fun CompressFileDialog(
     var selectedFormat by remember { mutableStateOf(CompressionFormat.ZIP) }
     var selectedLevel by remember { mutableStateOf(CompressionLevel.NORMAL) }
     var secondaryCores by remember { mutableStateOf(4) }
+    var splitSizeMb by remember { mutableStateOf(0) } // 0 = sin dividir
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -68,7 +69,7 @@ fun CompressFileDialog(
                         )
                     )
                     Text(
-                        text = "Motor Multi-Core con Cifrado AES-256",
+                        text = "Motor Multi-Core con Cifrado AES-256 & Partes",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -161,6 +162,64 @@ fun CompressFileDialog(
                             text = if (password.isNotBlank()) "🔒 Se aplicará cifrado militar AES de 256 bits al ZIP." else "Si se deja en blanco, la compresión no tendrá contraseña.",
                             style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
                             color = if (password.isNotBlank()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // Split Volume / Dividir en partes Section
+                Card(
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceContainer
+                    ),
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(14.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.CallSplit,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Dividir en Partes (Multi-Volumen)",
+                                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        val splitOptions = listOf(
+                            0 to "Un solo archivo",
+                            10 to "10 MB",
+                            50 to "50 MB",
+                            100 to "100 MB",
+                            700 to "700 MB"
+                        )
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            splitOptions.forEach { (mb, label) ->
+                                FilterChip(
+                                    selected = splitSizeMb == mb,
+                                    onClick = { splitSizeMb = mb },
+                                    label = { Text(label, fontSize = 10.sp, fontWeight = FontWeight.SemiBold) },
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = if (splitSizeMb > 0) "📦 Se creará una carpeta especial con partes divididas de ${splitSizeMb}MB (.part1, .part2...)" else "El archivo no se dividirá en partes.",
+                            style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
+                            color = if (splitSizeMb > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -263,7 +322,7 @@ fun CompressFileDialog(
                         val extension = selectedFormat.extension
                         val finalName = if (fileName.endsWith(extension)) fileName else "$fileName$extension"
                         val pass = password.ifBlank { null }
-                        onCompress(finalName, selectedFormat, selectedLevel, secondaryCores, pass)
+                        onCompress(finalName, selectedFormat, selectedLevel, secondaryCores, pass, splitSizeMb)
                     }
                 },
                 shape = RoundedCornerShape(12.dp),

@@ -317,10 +317,20 @@ class FileManagerViewModel(application: Application) : AndroidViewModel(applicat
         format: CompressionFormat,
         level: CompressionLevel,
         assignedCores: Int,
-        password: String? = null
+        password: String? = null,
+        splitSizeMb: Int = 0
     ) {
         val item = _uiState.value.selectedItem ?: return
-        val destPath = "${_uiState.value.currentPath}/$targetArchiveName"
+        val currentDir = _uiState.value.currentPath
+        val destPath = if (splitSizeMb > 0) {
+            val partsFolderName = targetArchiveName.substringBeforeLast(".") + "_partes"
+            val partsDir = java.io.File(currentDir, partsFolderName)
+            if (!partsDir.exists()) partsDir.mkdirs()
+            "${partsDir.absolutePath}/$targetArchiveName"
+        } else {
+            "$currentDir/$targetArchiveName"
+        }
+
         setShowCompressDialog(false)
         _uiState.update { it.copy(showCompressionProgressDialog = true) }
 
@@ -332,6 +342,7 @@ class FileManagerViewModel(application: Application) : AndroidViewModel(applicat
                 level = level,
                 assignedCoresCount = assignedCores,
                 password = password,
+                splitSizeMb = splitSizeMb,
                 onProgress = { progress ->
                     _uiState.update { state -> state.copy(compressionProgress = progress) }
                 }

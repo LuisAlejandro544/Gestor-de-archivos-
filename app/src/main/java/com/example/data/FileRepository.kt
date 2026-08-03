@@ -99,12 +99,13 @@ class FileRepository(private val context: Context) {
 
     private fun determineFileType(ext: String): FileType {
         return when (ext) {
+            "json" -> FileType.JSON
             "zip", "rar", "7z", "tar", "gz", "bz2", "xz", "iso", "tgz", "z" -> FileType.ARCHIVE
             "jpg", "jpeg", "png", "gif", "webp", "svg", "bmp", "heic" -> FileType.IMAGE
             "mp4", "mkv", "avi", "mov", "webm", "3gp", "flv" -> FileType.VIDEO
             "mp3", "flac", "wav", "aac", "m4a", "ogg", "opus" -> FileType.AUDIO
             "pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "txt", "rtf", "epub", "csv" -> FileType.DOCUMENT
-            "kt", "java", "py", "js", "ts", "html", "css", "json", "xml", "sh", "c", "cpp", "gradle", "sql", "pem", "key", "crt", "cer", "pub", "p8", "keytool" -> FileType.CODE
+            "kt", "java", "py", "js", "ts", "html", "css", "xml", "sh", "c", "cpp", "gradle", "sql", "pem", "key", "crt", "cer", "pub", "p8", "keytool" -> FileType.CODE
             "apk", "xapk", "apks" -> FileType.APK
             else -> FileType.UNKNOWN
         }

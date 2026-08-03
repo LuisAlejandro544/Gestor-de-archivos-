@@ -12,6 +12,7 @@ enum class FileType {
     DOCUMENT,
     CODE,
     APK,
+    JSON,
     UNKNOWN;
 
     val color: Color
@@ -24,6 +25,7 @@ enum class FileType {
             DOCUMENT -> FileColorDocument
             CODE -> FileColorCode
             APK -> FileColorApk
+            JSON -> FileColorJson
             UNKNOWN -> FileColorUnknown
         }
 }

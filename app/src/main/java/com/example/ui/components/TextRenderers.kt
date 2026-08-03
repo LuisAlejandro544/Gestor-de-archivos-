@@ -212,3 +212,125 @@ fun RenderMarkdownContent(
         }
     }
 }
+
+@Composable
+fun RenderJsonContent(
+    content: String,
+    searchQuery: String,
+    fontSizeSp: Int,
+    isMonospace: Boolean
+) {
+    val lines = remember(content) { content.lines() }
+    val fontFamily = if (isMonospace) FontFamily.Monospace else FontFamily.Default
+
+    val keyColor = androidx.compose.ui.graphics.Color(0xFFF59E0B) // Amber Gold for keys
+    val stringColor = androidx.compose.ui.graphics.Color(0xFF10B981) // Emerald for string values
+    val numberColor = androidx.compose.ui.graphics.Color(0xFF8B5CF6) // Purple for numbers/booleans
+    val bracketColor = MaterialTheme.colorScheme.primary
+
+    // Check JSON validity
+    val isJsonValid = remember(content) {
+        try {
+            org.json.JSONObject(content)
+            true
+        } catch (e1: Exception) {
+            try {
+                org.json.JSONArray(content)
+                true
+            } catch (e2: Exception) {
+                false
+            }
+        }
+    }
+
+    // Validation badge
+    Surface(
+        color = if (isJsonValid) androidx.compose.ui.graphics.Color(0xFF10B981).copy(alpha = 0.15f) else MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f),
+        shape = RoundedCornerShape(6.dp),
+        modifier = Modifier.padding(bottom = 8.dp)
+    ) {
+        Row(
+            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically,
+            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+        ) {
+            Text(
+                text = if (isJsonValid) "✓ JSON Válido" else "⚠️ Sintaxis JSON con Errores",
+                style = MaterialTheme.typography.labelSmall.copy(
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 11.sp,
+                    color = if (isJsonValid) androidx.compose.ui.graphics.Color(0xFF10B981) else MaterialTheme.colorScheme.error
+                )
+            )
+        }
+    }
+
+    lines.forEachIndexed { index, line ->
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 1.dp)
+        ) {
+            // Line Number
+            Text(
+                text = "${index + 1}".padStart(4, ' '),
+                style = MaterialTheme.typography.bodySmall.copy(
+                    fontSize = (fontSizeSp - 2).sp,
+                    fontFamily = FontFamily.Monospace,
+                    color = MaterialTheme.colorScheme.outline
+                ),
+                modifier = Modifier.width(36.dp)
+            )
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            // Highlighted JSON Annotated String
+            val annotatedText = remember(line, searchQuery) {
+                buildAnnotatedString {
+                    val trimmed = line.trim()
+                    if (trimmed.contains(":")) {
+                        val parts = line.split(":", limit = 2)
+                        val keyPart = parts[0]
+                        val valPart = parts.getOrNull(1) ?: ""
+
+                        withStyle(SpanStyle(color = keyColor, fontWeight = FontWeight.SemiBold)) {
+                            append(keyPart)
+                        }
+                        withStyle(SpanStyle(color = bracketColor)) {
+                            append(":")
+                        }
+
+                        val valTrim = valPart.trim()
+                        if (valTrim.startsWith("\"")) {
+                            withStyle(SpanStyle(color = stringColor)) {
+                                append(valPart)
+                            }
+                        } else if (valTrim.matches(Regex("-?\\d+(\\.\\d+)?")) || valTrim in listOf("true", "false", "null")) {
+                            withStyle(SpanStyle(color = numberColor, fontWeight = FontWeight.Bold)) {
+                                append(valPart)
+                            }
+                        } else {
+                            append(valPart)
+                        }
+                    } else {
+                        if (trimmed in listOf("{", "}", "[", "]", "},", "],")) {
+                            withStyle(SpanStyle(color = bracketColor, fontWeight = FontWeight.Bold)) {
+                                append(line)
+                            }
+                        } else {
+                            append(line)
+                        }
+                    }
+                }
+            }
+
+            Text(
+                text = annotatedText,
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontSize = fontSizeSp.sp,
+                    fontFamily = fontFamily
+                ),
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+    }
+}

@@ -23,36 +23,6 @@ import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream
 import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream
 
-enum class CompressionFormat(val extension: String, val label: String) {
-    ZIP(".zip", "ZIP (Estándar Deflate / AES-256)"),
-    SEVEN_ZIP(".7z", "7z (Motor Rust LZMA2 High Ratio)"),
-    TAR_GZ(".tar.gz", "TAR.GZ (Linux Gzip)"),
-    RAR(".rar", "RAR (Motor C++ Multi-Core v5.0)")
-}
-
-enum class CompressionLevel(val labelEs: String) {
-    FAST("Rápida (Almacenar)"),
-    NORMAL("Normal (Balanceada)"),
-    MAXIMUM("Máxima (Óptima)")
-}
-
-data class CompressionProgress(
-    val isRunning: Boolean = false,
-    val isFinished: Boolean = false,
-    val percentage: Int = 0,
-    val currentFileName: String = "",
-    val totalFilesProcessed: Int = 0,
-    val totalFilesCount: Int = 0,
-    val processedBytes: Long = 0L,
-    val totalBytes: Long = 0L,
-    val speedMbPerSec: Double = 0.0,
-    val assignedSecondaryCores: Int = 4,
-    val activeWorkerThreadName: String = "",
-    val engineName: String = "C++/Rust & Zip4j / 7z Engine v4.0",
-    val logMessages: List<String> = emptyList(),
-    val errorMessage: String? = null
-)
-
 class NativeArchiveEngine {
 
     companion object {
@@ -88,6 +58,7 @@ class NativeArchiveEngine {
         level: CompressionLevel,
         assignedCoresCount: Int,
         password: String? = null,
+        splitSizeMb: Int = 0,
         onProgress: (CompressionProgress) -> Unit
     ) = withContext(Dispatchers.IO) {
         val totalCores = Runtime.getRuntime().availableProcessors()
@@ -358,10 +329,16 @@ class NativeArchiveEngine {
                 }
             }
 
+            if (splitSizeMb > 0 && targetArchiveFile.exists()) {
+                splitArchiveFile(targetArchiveFile, splitSizeMb, ::addLog)
+            }
+
             val totalElapsed = ((System.currentTimeMillis() - startTime) / 1000.0).coerceAtLeast(0.1)
             val finalSpeed = (processedBytes.toDouble() / (1024 * 1024)) / totalElapsed
             addLog("¡Compresión completada con éxito!")
-            addLog("Archivo generado: ${targetArchiveFile.name} (${targetArchiveFile.length() / 1024} KB)")
+            if (targetArchiveFile.exists()) {
+                addLog("Archivo generado: ${targetArchiveFile.name} (${targetArchiveFile.length() / 1024} KB)")
+            }
 
             onProgress(
                 CompressionProgress(
@@ -575,5 +552,49 @@ class NativeArchiveEngine {
         } finally {
             threadPoolExecutor.shutdown()
         }
+    }
+
+    private fun splitArchiveFile(file: File, splitSizeMb: Int, addLog: (String) -> Unit): List<File> {
+        if (!file.exists() || splitSizeMb <= 0) return listOf(file)
+        val chunkSize = splitSizeMb.toLong() * 1024L * 1024L
+        val parts = mutableListOf<File>()
+        val buffer = ByteArray(1024 * 1024)
+        val parentDir = file.parentFile ?: return listOf(file)
+        val baseName = file.name
+
+        addLog("✂️ Dividiendo archivo en partes de $splitSizeMb MB en carpeta '${parentDir.name}'...")
+
+        var partNumber = 1
+        var bytesWrittenCurrentPart = 0L
+        var currentOutputStream: java.io.FileOutputStream? = null
+
+        try {
+            java.io.FileInputStream(file).use { fis ->
+                var bytesRead: Int
+                while (fis.read(buffer).also { bytesRead = it } != -1) {
+                    if (currentOutputStream == null || bytesWrittenCurrentPart >= chunkSize) {
+                        currentOutputStream?.close()
+                        val partName = "$baseName.part${String.format("%03d", partNumber)}"
+                        val partFile = File(parentDir, partName)
+                        parts.add(partFile)
+                        currentOutputStream = java.io.FileOutputStream(partFile)
+                        addLog("📦 Creando parte ${partNumber}: $partName")
+                        partNumber++
+                        bytesWrittenCurrentPart = 0L
+                    }
+                    currentOutputStream?.write(buffer, 0, bytesRead)
+                    bytesWrittenCurrentPart += bytesRead
+                }
+                currentOutputStream?.close()
+            }
+
+            if (parts.isNotEmpty()) {
+                file.delete()
+                addLog("✅ Se crearon exitosamente ${parts.size} partes en '${parentDir.name}'")
+            }
+        } catch (e: Exception) {
+            addLog("⚠️ Error al dividir partes: ${e.localizedMessage}")
+        }
+        return parts
     }
 }

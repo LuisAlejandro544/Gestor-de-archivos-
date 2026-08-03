@@ -1,8 +1,9 @@
 package com.example.ui.components
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -25,6 +26,7 @@ import com.example.data.FileItem
 import com.example.data.FileType
 import com.example.util.rememberApkIcon
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun FileItemCard(
     item: FileItem,
@@ -39,6 +41,7 @@ fun FileItemCard(
     val badgeColor = when (extLower) {
         "txt" -> Color(0xFF0288D1)
         "md" -> Color(0xFF673AB7)
+        "json" -> Color(0xFFF59E0B)
         else -> null
     }
 
@@ -46,7 +49,10 @@ fun FileItemCard(
         modifier = modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
-            .clickable { onClick() }
+            .combinedClickable(
+                onClick = onClick,
+                onLongClick = onOptionClick
+            )
             .testTag("file_card_${item.name}"),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface

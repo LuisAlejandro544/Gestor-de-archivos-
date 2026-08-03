@@ -29,11 +29,15 @@ Este archivo proporciona contexto técnico profundo a modelos de lenguaje (LLMs)
    - Flujo de interacción optimizado: las opciones de la hoja de acciones ejecutan los diálogos de compresión/extracción de forma fluida.
 
 3. **Manejo de Operaciones de Compresión y Exploración ZIP:**
-   - La clase `NativeArchiveEngine` emite estados mediante callbacks de `CompressionProgress`.
+   - La clase `NativeArchiveEngine` emite estados mediante callbacks de `CompressionProgress` y realiza la partición en volúmenes (split archive) de 10MB, 50MB, 100MB o 700MB guardando las partes en una carpeta dedicada `_partes`.
    - La clase `ZipViewerEngine` genera la jerarquía virtual de carpetas y archivos dentro de `.zip`, `.7z`, `.tar.gz`, `.apk` y `.jar`.
    - `ZipExplorerDialog` permite navegar por subcarpetas dentro del ZIP con breadcrumbs, buscar elementos y previsualizar archivos de texto en RAM sin extraer en disco.
    - La consola en tiempo real muestra velocidad en MB/s, hilo secundario activo asignado y logs estilo terminal.
 
-4. **Visor Nativo PEM (`PemViewerDialog.kt`):**
-   - Inspección sintáctica sin alterar la codificación original ni requerir renombrado a `.txt`.
+5. **Modulo ArchivoX Text v1.2 (`ArchivoXTextViewerDialog.kt`):**
+   - Pantalla completa independiente (`DialogProperties(usePlatformDefaultWidth = false)`).
+   - Alternancia entre `TextMode.PREVIEW` (lectura con numeración de líneas, sintaxis Markdown o JSON resaltado con badge de validación sintáctica) y `TextMode.EDIT` (edición interactiva mediante `OutlinedTextField`).
+   - Botón de formateo e indentación de JSON automático (`formatJsonContent()`).
+   - Persistencia de cambios asíncrona mediante `Dispatchers.IO` escribiendo en `File(item.path)`.
+   - Cálculo en tiempo real de estadísticas de lectura (líneas, palabras, caracteres).
 

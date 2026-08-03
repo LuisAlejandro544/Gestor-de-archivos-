@@ -44,4 +44,5 @@ val FileColorAudio = Color(0xFF10B981) // Emerald green
 val FileColorDocument = Color(0xFF0284C7) // Document cyan
 val FileColorCode = Color(0xFFEA580C) // Code orange
 val FileColorApk = Color(0xFF16A34A) // Android green
+val FileColorJson = Color(0xFFF59E0B) // JSON Amber/Yellow
 val FileColorUnknown = Color(0xFF64748B) // Slate gray
