@@ -10,6 +10,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -70,17 +71,14 @@ fun FileManagerScreen(
                 onClick = { viewModel.setShowCreateFolderDialog(true) },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
-                shape = RoundedCornerShape(16.dp),
+                shape = CircleShape,
                 modifier = Modifier.testTag("fab_create_folder")
             ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(imageVector = Icons.Default.CreateNewFolder, contentDescription = "Nueva carpeta")
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(text = "Nueva Carpeta", fontWeight = FontWeight.Bold)
-                }
+                Icon(
+                    imageVector = Icons.Default.CreateNewFolder,
+                    contentDescription = "Nueva carpeta",
+                    modifier = Modifier.size(24.dp)
+                )
             }
         }
     ) { innerPadding ->

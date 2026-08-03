@@ -16,6 +16,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -39,13 +40,12 @@ fun BreadcrumbBar(
         modifier = modifier
             .fillMaxWidth()
             .testTag("breadcrumb_bar"),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
-        shape = RoundedCornerShape(12.dp)
+        color = Color.Transparent
     ) {
         Row(
             modifier = Modifier
                 .horizontalScroll(scrollState)
-                .padding(horizontal = 12.dp, vertical = 8.dp),
+                .padding(horizontal = 4.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             breadcrumbs.forEachIndexed { index, segment ->
@@ -56,11 +56,11 @@ fun BreadcrumbBar(
                     modifier = Modifier
                         .clip(RoundedCornerShape(8.dp))
                         .background(
-                            if (isLast) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.8f)
-                            else MaterialTheme.colorScheme.surface
+                            if (isLast) MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
+                            else MaterialTheme.colorScheme.surfaceContainerLow
                         )
                         .clickable(!isLast) { onSegmentClick(segment.path) }
-                        .padding(horizontal = 10.dp, vertical = 6.dp)
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
                 ) {
                     if (index == 0) {
                         Icon(
@@ -68,27 +68,27 @@ fun BreadcrumbBar(
                             contentDescription = "Almacenamiento",
                             tint = if (isLast) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier
-                                .size(16.dp)
-                                .padding(end = 4.dp)
+                                .size(14.dp)
+                                .padding(end = 2.dp)
                         )
                     } else {
                         Icon(
                             imageVector = Icons.Default.Folder,
                             contentDescription = "Carpeta",
-                            tint = MaterialTheme.colorScheme.secondary,
+                            tint = if (isLast) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
                             modifier = Modifier
-                                .size(16.dp)
-                                .padding(end = 4.dp)
+                                .size(14.dp)
+                                .padding(end = 2.dp)
                         )
                     }
 
                     Text(
                         text = segment.name,
-                        style = MaterialTheme.typography.bodyMedium.copy(
+                        style = MaterialTheme.typography.bodySmall.copy(
                             fontWeight = if (isLast) FontWeight.Bold else FontWeight.Medium,
-                            fontSize = 13.sp
+                            fontSize = 12.sp
                         ),
-                        color = if (isLast) MaterialTheme.colorScheme.onPrimaryContainer
+                        color = if (isLast) MaterialTheme.colorScheme.primary
                         else MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -99,10 +99,10 @@ fun BreadcrumbBar(
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
                         contentDescription = "Separator",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f),
                         modifier = Modifier
-                            .padding(horizontal = 2.dp)
-                            .size(16.dp)
+                            .padding(horizontal = 1.dp)
+                            .size(14.dp)
                     )
                 }
             }

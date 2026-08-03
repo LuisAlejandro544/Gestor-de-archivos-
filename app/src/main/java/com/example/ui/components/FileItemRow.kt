@@ -38,17 +38,15 @@ fun FileItemRow(
     Surface(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 3.dp, horizontal = 4.dp)
-            .clip(RoundedCornerShape(12.dp))
+            .clip(RoundedCornerShape(8.dp))
             .clickable { onClick() }
             .testTag("file_row_${item.name}"),
-        color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 1.dp
+        color = Color.Transparent
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 10.dp),
+                .padding(horizontal = 12.dp, vertical = 7.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Colored File / Folder Icon Badge or real APK logo
@@ -62,9 +60,9 @@ fun FileItemRow(
 
             Box(
                 modifier = Modifier
-                    .size(44.dp)
+                    .size(38.dp)
                     .clip(CircleShape)
-                    .background(iconInfo.second.copy(alpha = 0.15f)),
+                    .background(iconInfo.second.copy(alpha = 0.12f)),
                 contentAlignment = Alignment.Center
             ) {
                 if (apkIcon != null) {
@@ -72,7 +70,7 @@ fun FileItemRow(
                         bitmap = apkIcon,
                         contentDescription = "APK Logo",
                         modifier = Modifier
-                            .size(32.dp)
+                            .size(28.dp)
                             .clip(CircleShape)
                     )
                 } else {
@@ -80,7 +78,7 @@ fun FileItemRow(
                         imageVector = iconInfo.first,
                         contentDescription = item.fileType.name,
                         tint = iconInfo.second,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(20.dp)
                     )
                 }
             }
@@ -94,9 +92,9 @@ fun FileItemRow(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         text = item.name,
-                        style = MaterialTheme.typography.bodyLarge.copy(
+                        style = MaterialTheme.typography.bodyMedium.copy(
                             fontWeight = if (item.isDirectory) FontWeight.SemiBold else FontWeight.Normal,
-                            fontSize = 15.sp
+                            fontSize = 14.sp
                         ),
                         color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
@@ -107,44 +105,44 @@ fun FileItemRow(
                     if (badgeColor != null) {
                         Spacer(modifier = Modifier.width(6.dp))
                         Surface(
-                            color = badgeColor.copy(alpha = 0.18f),
-                            shape = RoundedCornerShape(6.dp)
+                            color = badgeColor.copy(alpha = 0.15f),
+                            shape = RoundedCornerShape(4.dp)
                         ) {
                             Text(
                                 text = extLower.uppercase(),
                                 style = MaterialTheme.typography.labelSmall.copy(
-                                    fontWeight = FontWeight.ExtraBold,
-                                    fontSize = 10.sp
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 9.sp
                                 ),
                                 color = badgeColor,
-                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                modifier = Modifier.padding(horizontal = 5.dp, vertical = 1.dp)
                             )
                         }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(2.dp))
+                Spacer(modifier = Modifier.height(1.dp))
 
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
                         text = item.formattedSize,
-                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
+                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.Medium
                     )
 
                     Text(
                         text = " • ",
-                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                     )
 
                     Text(
                         text = item.formattedDate,
-                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 11.sp),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                     )
                 }
             }
@@ -153,14 +151,14 @@ fun FileItemRow(
             IconButton(
                 onClick = onOptionClick,
                 modifier = Modifier
-                    .size(36.dp)
+                    .size(32.dp)
                     .testTag("file_options_${item.name}")
             ) {
                 Icon(
                     imageVector = Icons.Default.MoreVert,
                     contentDescription = "Opciones",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(20.dp)
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                    modifier = Modifier.size(18.dp)
                 )
             }
         }
