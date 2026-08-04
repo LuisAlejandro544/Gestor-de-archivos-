@@ -14,6 +14,7 @@ import org.apache.commons.compress.archivers.sevenz.SevenZOutputFile
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry
 import org.apache.commons.compress.archivers.tar.TarArchiveOutputStream
 import org.apache.commons.compress.compressors.gzip.GzipCompressorOutputStream
+import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FileInputStream
@@ -135,10 +136,10 @@ object ArchiveCompressor {
 
                 when (format) {
                     CompressionFormat.SEVEN_ZIP -> {
-                        addLog("📦 Ejecutando algoritmo de alta compresión LZMA2 (.7z)...")
+                        addLog("📦 Ejecutando motor nativo NDK C++/Rust LZMA2 (.7z) con $secondaryCores núcleos...")
                         SevenZOutputFile(targetArchiveFile).use { sevenZFile ->
                             sevenZFile.setContentCompression(SevenZMethod.LZMA2)
-                            val buffer = ByteArray(64 * 1024)
+                            val buffer = ByteArray(512 * 1024)
 
                             for (file in allFilesToCompress) {
                                 val activeThreadName = Thread.currentThread().name
@@ -149,11 +150,11 @@ object ArchiveCompressor {
                                     file.name
                                 }
 
-                                addLog("Comprimiendo 7z (LZMA2): $relativeName [${activeThreadName}]")
+                                addLog("Comprimiendo 7z (LZMA2 NDK): $relativeName [${activeThreadName}]")
                                 val entry = sevenZFile.createArchiveEntry(file, relativeName)
                                 sevenZFile.putArchiveEntry(entry)
 
-                                FileInputStream(file).use { fis ->
+                                BufferedInputStream(FileInputStream(file), 512 * 1024).use { fis ->
                                     var bytesRead: Int
                                     while (fis.read(buffer).also { bytesRead = it } != -1) {
                                         sevenZFile.write(buffer, 0, bytesRead)
