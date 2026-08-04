@@ -38,22 +38,34 @@ fun TextEditorControlBar(
             SegmentedButton(
                 selected = currentMode == TextMode.PREVIEW,
                 onClick = { onModeChange(TextMode.PREVIEW) },
-                shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2)
-            ) {
-                Icon(Icons.Default.Visibility, contentDescription = null, modifier = Modifier.size(14.dp))
-                Spacer(modifier = Modifier.width(4.dp))
-                Text("Lectura", fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
-            }
+                shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
+                icon = {
+                    Icon(
+                        imageVector = if (currentMode == TextMode.PREVIEW) Icons.Default.Check else Icons.Default.Visibility,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp)
+                    )
+                },
+                label = {
+                    Text("Lectura", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
+                }
+            )
 
             SegmentedButton(
                 selected = currentMode == TextMode.EDIT,
                 onClick = { onModeChange(TextMode.EDIT) },
-                shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2)
-            ) {
-                Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(14.dp))
-                Spacer(modifier = Modifier.width(4.dp))
-                Text("Editor", fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
-            }
+                shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
+                icon = {
+                    Icon(
+                        imageVector = if (currentMode == TextMode.EDIT) Icons.Default.Check else Icons.Default.Edit,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp)
+                    )
+                },
+                label = {
+                    Text("Editor", fontSize = 12.sp, fontWeight = FontWeight.SemiBold, maxLines = 1)
+                }
+            )
         }
 
         // Right-side controls (Markdown/JSON toggle & font adjustments)

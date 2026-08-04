@@ -85,19 +85,23 @@ fun ArchivoXTextViewerDialog(
         isLoading = false
     }
 
-    // Format JSON function
+    // Format JSON function asynchronously off-thread
     fun formatJsonContent() {
-        try {
-            val trimmed = editableContent.trim()
-            val formatted = if (trimmed.startsWith("[")) {
-                org.json.JSONArray(trimmed).toString(2)
-            } else {
-                org.json.JSONObject(trimmed).toString(2)
+        coroutineScope.launch {
+            try {
+                val formatted = withContext(Dispatchers.Default) {
+                    val trimmed = editableContent.trim()
+                    if (trimmed.startsWith("[")) {
+                        org.json.JSONArray(trimmed).toString(2)
+                    } else {
+                        org.json.JSONObject(trimmed).toString(2)
+                    }
+                }
+                editableContent = formatted
+                Toast.makeText(context, "¡JSON Formateado!", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                Toast.makeText(context, "Error al formatear JSON: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
             }
-            editableContent = formatted
-            Toast.makeText(context, "¡JSON Formateado!", Toast.LENGTH_SHORT).show()
-        } catch (e: Exception) {
-            Toast.makeText(context, "Error al formatear JSON: ${e.localizedMessage}", Toast.LENGTH_LONG).show()
         }
     }
     fun saveFile() {
@@ -123,13 +127,24 @@ fun ArchivoXTextViewerDialog(
         }
     }
 
-    val wordCount = remember(editableContent) {
-        if (editableContent.isBlank()) 0
-        else editableContent.trim().split(Regex("\\s+")).size
+    // Compute text statistics asynchronously on Dispatchers.Default to prevent UI freezes on large files
+    val textStats by produceState(
+        initialValue = Triple(0, 0, 0), // lineCount, wordCount, charCount
+        key1 = editableContent
+    ) {
+        value = withContext(Dispatchers.Default) {
+            if (editableContent.isBlank()) {
+                Triple(0, 0, 0)
+            } else {
+                val lines = editableContent.lines().size
+                val words = editableContent.trim().split(Regex("\\s+")).size
+                val chars = editableContent.length
+                Triple(lines, words, chars)
+            }
+        }
     }
 
-    val charCount = remember(editableContent) { editableContent.length }
-    val lineCount = remember(editableContent) { if (editableContent.isBlank()) 0 else editableContent.lines().size }
+    val (lineCount, wordCount, charCount) = textStats
 
     Dialog(
         onDismissRequest = {
@@ -383,36 +398,29 @@ fun ArchivoXTextViewerDialog(
                                 }
 
                                 TextMode.PREVIEW -> {
-                                    // Formatted Render Preview
-                                    SelectionContainer {
-                                        val scrollState = rememberScrollState()
-                                        Column(
-                                            modifier = Modifier
-                                                .fillMaxSize()
-                                                .verticalScroll(scrollState)
-                                        ) {
-                                            if (item.extension.lowercase() == "json") {
-                                                RenderJsonContent(
-                                                    content = editableContent,
-                                                    searchQuery = searchQuery,
-                                                    fontSizeSp = fontSizeSp,
-                                                    isMonospace = isMonospace
-                                                )
-                                            } else if (isMarkdownRenderMode && item.extension.lowercase() == "md") {
-                                                RenderMarkdownContent(
-                                                    content = editableContent,
-                                                    searchQuery = searchQuery,
-                                                    fontSizeSp = fontSizeSp,
-                                                    isMonospace = isMonospace
-                                                )
-                                            } else {
-                                                RenderPlainTextWithLineNumbers(
-                                                    content = editableContent,
-                                                    searchQuery = searchQuery,
-                                                    fontSizeSp = fontSizeSp,
-                                                    isMonospace = isMonospace
-                                                )
-                                            }
+                                    // Formatted Render Preview (Uses LazyColumn internally for smooth multi-threaded scrolling)
+                                    SelectionContainer(modifier = Modifier.fillMaxSize()) {
+                                        if (item.extension.lowercase() == "json") {
+                                            RenderJsonContent(
+                                                content = editableContent,
+                                                searchQuery = searchQuery,
+                                                fontSizeSp = fontSizeSp,
+                                                isMonospace = isMonospace
+                                            )
+                                        } else if (isMarkdownRenderMode && item.extension.lowercase() == "md") {
+                                            RenderMarkdownContent(
+                                                content = editableContent,
+                                                searchQuery = searchQuery,
+                                                fontSizeSp = fontSizeSp,
+                                                isMonospace = isMonospace
+                                            )
+                                        } else {
+                                            RenderPlainTextWithLineNumbers(
+                                                content = editableContent,
+                                                searchQuery = searchQuery,
+                                                fontSizeSp = fontSizeSp,
+                                                isMonospace = isMonospace
+                                            )
                                         }
                                     }
                                 }
