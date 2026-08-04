@@ -37,7 +37,9 @@ fun FileManagerTopBar(
     onSelectAll: () -> Unit = {},
     onBatchMove: () -> Unit = {},
     onBatchCopy: () -> Unit = {},
-    onBatchDelete: () -> Unit = {}
+    onBatchCompress: () -> Unit = {},
+    onBatchDelete: () -> Unit = {},
+    onToggleMultiSelect: () -> Unit = {}
 ) {
     if (isMultiSelectMode) {
         TopAppBar(
@@ -61,6 +63,9 @@ fun FileManagerTopBar(
                 }
                 IconButton(onClick = onBatchCopy, enabled = selectedCount > 0) {
                     Icon(imageVector = Icons.Default.ContentCopy, contentDescription = "Copiar seleccionados")
+                }
+                IconButton(onClick = onBatchCompress, enabled = selectedCount > 0) {
+                    Icon(imageVector = Icons.Default.FolderZip, contentDescription = "Comprimir seleccionados", tint = MaterialTheme.colorScheme.primary)
                 }
                 IconButton(onClick = onBatchDelete, enabled = selectedCount > 0) {
                     Icon(imageVector = Icons.Default.Delete, contentDescription = "Eliminar seleccionados", tint = MaterialTheme.colorScheme.error)
@@ -99,6 +104,17 @@ fun FileManagerTopBar(
                 }
             },
             actions = {
+                // Multi-select toggle
+                IconButton(
+                    onClick = onToggleMultiSelect,
+                    modifier = Modifier.testTag("action_multiselect")
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Checklist,
+                        contentDescription = "Seleccionar varios"
+                    )
+                }
+
                 // Search toggle
                 IconButton(
                     onClick = onToggleSearch,

@@ -39,7 +39,8 @@ fun FileDetailsBottomSheet(
     onExtractClick: () -> Unit,
     onExploreZipClick: () -> Unit = {},
     onPemViewerClick: () -> Unit = {},
-    onTextEditorClick: () -> Unit = {}
+    onTextEditorClick: () -> Unit = {},
+    onSelectMultiClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val iconInfo = getFileIconAndColor(item.fileType, item.isDirectory, item.extension)
@@ -240,6 +241,22 @@ fun FileDetailsBottomSheet(
                     Spacer(modifier = Modifier.width(6.dp))
                     Text("Copiar Ruta")
                 }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            OutlinedButton(
+                onClick = {
+                    onDismiss()
+                    onSelectMultiClick()
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("action_select_multi")
+            ) {
+                Icon(Icons.Default.Checklist, contentDescription = null, modifier = Modifier.size(18.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Seleccionar varios / Mover varios")
             }
 
             Spacer(modifier = Modifier.height(10.dp))

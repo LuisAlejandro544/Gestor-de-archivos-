@@ -70,8 +70,73 @@ fun FileManagerScreen(
                 onSelectAll = { viewModel.selectAllItems() },
                 onBatchMove = { viewModel.openFolderPicker(FolderPickerAction.MOVE) },
                 onBatchCopy = { viewModel.openFolderPicker(FolderPickerAction.COPY) },
-                onBatchDelete = { viewModel.executeBatchDelete() }
+                onBatchCompress = { viewModel.setShowCompressDialog(true) },
+                onBatchDelete = { viewModel.executeBatchDelete() },
+                onToggleMultiSelect = { viewModel.toggleMultiSelectMode() }
             )
+        },
+        bottomBar = {
+            if (uiState.isMultiSelectMode) {
+                Surface(
+                    tonalElevation = 8.dp,
+                    shadowElevation = 8.dp,
+                    color = MaterialTheme.colorScheme.surfaceVariant
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceAround,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        TextButton(
+                            onClick = { viewModel.openFolderPicker(FolderPickerAction.MOVE) },
+                            enabled = uiState.selectedPaths.isNotEmpty()
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Icon(Icons.Default.DriveFileMove, contentDescription = null)
+                                Text("Mover (${uiState.selectedPaths.size})", style = MaterialTheme.typography.labelSmall)
+                            }
+                        }
+                        TextButton(
+                            onClick = { viewModel.openFolderPicker(FolderPickerAction.COPY) },
+                            enabled = uiState.selectedPaths.isNotEmpty()
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Icon(Icons.Default.ContentCopy, contentDescription = null)
+                                Text("Copiar (${uiState.selectedPaths.size})", style = MaterialTheme.typography.labelSmall)
+                            }
+                        }
+                        TextButton(
+                            onClick = { viewModel.setShowCompressDialog(true) },
+                            enabled = uiState.selectedPaths.isNotEmpty()
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Icon(Icons.Default.FolderZip, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                                Text("Comprimir (${uiState.selectedPaths.size})", style = MaterialTheme.typography.labelSmall)
+                            }
+                        }
+                        TextButton(
+                            onClick = { viewModel.executeBatchDelete() },
+                            enabled = uiState.selectedPaths.isNotEmpty(),
+                            colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Icon(Icons.Default.Delete, contentDescription = null)
+                                Text("Eliminar (${uiState.selectedPaths.size})", style = MaterialTheme.typography.labelSmall)
+                            }
+                        }
+                        TextButton(
+                            onClick = { viewModel.clearSelection() }
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Icon(Icons.Default.Close, contentDescription = null)
+                                Text("Cancelar", style = MaterialTheme.typography.labelSmall)
+                            }
+                        }
+                    }
+                }
+            }
         },
         floatingActionButton = {
             var showFabMenu by remember { mutableStateOf(false) }
@@ -283,7 +348,8 @@ fun FileManagerScreen(
                 onExtractClick = { viewModel.setShowExtractDialog(true) },
                 onExploreZipClick = { viewModel.openZipExplorer(item) },
                 onPemViewerClick = { viewModel.openPemViewer(item) },
-                onTextEditorClick = { viewModel.openTextFileWithExtension(item) }
+                onTextEditorClick = { viewModel.openTextFileWithExtension(item) },
+                onSelectMultiClick = { viewModel.toggleSelectPath(item.path) }
             )
         }
     }
@@ -303,12 +369,21 @@ fun FileManagerScreen(
     }
 
     // Compress File Dialog
-    if (uiState.showCompressDialog && uiState.selectedItem != null) {
+    if (uiState.showCompressDialog) {
+        val defaultName = if (uiState.isMultiSelectMode && uiState.selectedPaths.isNotEmpty()) {
+            "archivos_comprimidos"
+        } else {
+            uiState.selectedItem?.name?.substringBeforeLast(".") ?: "archivo_comprimido"
+        }
         CompressFileDialog(
-            defaultName = uiState.selectedItem!!.name.substringBeforeLast("."),
+            defaultName = defaultName,
             onDismiss = { viewModel.setShowCompressDialog(false) },
             onCompress = { targetName, format, level, cores, password, splitSizeMb ->
-                viewModel.compressSelectedItem(targetName, format, level, cores, password, splitSizeMb)
+                if (uiState.isMultiSelectMode && uiState.selectedPaths.isNotEmpty()) {
+                    viewModel.compressBatchSelectedItems(targetName, format, level, cores, password, splitSizeMb)
+                } else {
+                    viewModel.compressSelectedItem(targetName, format, level, cores, password, splitSizeMb)
+                }
             }
         )
     }

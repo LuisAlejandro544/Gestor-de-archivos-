@@ -493,6 +493,51 @@ class FileManagerViewModel(application: Application) : AndroidViewModel(applicat
         }
     }
 
+    fun compressBatchSelectedItems(
+        targetArchiveName: String,
+        format: CompressionFormat,
+        level: CompressionLevel,
+        assignedCores: Int,
+        password: String? = null,
+        splitSizeMb: Int = 0
+    ) {
+        val selectedPaths = _uiState.value.selectedPaths.toList()
+        if (selectedPaths.isEmpty()) return
+        val selectedItems = _uiState.value.items.filter { it.path in selectedPaths }
+        if (selectedItems.isEmpty()) return
+
+        val currentDir = _uiState.value.currentPath
+        val destPath = if (splitSizeMb > 0) {
+            val partsFolderName = targetArchiveName.substringBeforeLast(".") + "_partes"
+            val partsDir = java.io.File(currentDir, partsFolderName)
+            if (!partsDir.exists()) partsDir.mkdirs()
+            "${partsDir.absolutePath}/$targetArchiveName"
+        } else {
+            "$currentDir/$targetArchiveName"
+        }
+
+        setShowCompressDialog(false)
+        _uiState.update { it.copy(showCompressionProgressDialog = true) }
+
+        viewModelScope.launch {
+            archiveEngine.compressFiles(
+                sourceItems = selectedItems,
+                destinationZipPath = destPath,
+                format = format,
+                level = level,
+                assignedCoresCount = assignedCores,
+                password = password,
+                splitSizeMb = splitSizeMb,
+                onProgress = { progress ->
+                    _uiState.update { state -> state.copy(compressionProgress = progress) }
+                }
+            )
+            clearSelection()
+            loadDirectory(_uiState.value.currentPath)
+            loadStorageInfo()
+        }
+    }
+
     fun compressSelectedItem(
         targetArchiveName: String,
         format: CompressionFormat,

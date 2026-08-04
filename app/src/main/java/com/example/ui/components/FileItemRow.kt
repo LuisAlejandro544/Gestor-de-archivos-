@@ -3,6 +3,7 @@ package com.example.ui.components
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -49,7 +50,7 @@ fun FileItemRow(
                     if (isMultiSelectMode) onToggleSelect() else onClick()
                 },
                 onLongClick = {
-                    if (!isMultiSelectMode) onOptionClick() else onToggleSelect()
+                    onToggleSelect()
                 }
             )
             .testTag("file_row_${item.name}"),
@@ -83,7 +84,8 @@ fun FileItemRow(
                 modifier = Modifier
                     .size(38.dp)
                     .clip(CircleShape)
-                    .background(iconInfo.second.copy(alpha = 0.12f)),
+                    .background(iconInfo.second.copy(alpha = 0.12f))
+                    .clickable { onToggleSelect() },
                 contentAlignment = Alignment.Center
             ) {
                 if (apkIcon != null) {

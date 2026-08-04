@@ -6,6 +6,16 @@ Un gestor de archivos y motor de compresión de alto rendimiento diseñado para 
 
 ## 🌟 Características Principales
 
+- **Selección Múltiple Intuitiva y Acciones en Lote (Mover, Copiar, Comprimir, Eliminar):**
+  - **Activación Ultrarrápida por Toque de Ícono:** Al presionar directamente el ícono izquierdo de cualquier archivo o carpeta (o mediante clic largo), se activa de inmediato el modo de selección múltiple.
+  - **Barra Superior e Inferior de Selección:** Muestra en tiempo real la cantidad de elementos marcados, botón para "Seleccionar todo" / "Desmarcar todo" y menú de acciones masivas.
+  - **Compresión Masiva en Lote:** Permite comprimir múltiples archivos y carpetas seleccionados simultáneamente a formatos `.zip`, `.7z` o `.tar.gz` con clave opcional AES-256 y particionado.
+  - **Selector de Carpeta de Destino (`FolderPickerDialog`):** Diálogo interactivo para navegar por el almacenamiento y confirmar la ruta exacta al mover o copiar lotes de archivos.
+- **Soporte y Detección de Archivos Comprimidos Cifrados (Protegidos con Contraseña):**
+  - Detección automática de archivos ZIP/7z cifrados con insignia visual de candado.
+  - Solicitud de contraseña mediante diálogo dedicado (`ArchivePasswordDialog`) para explorar o descomprimir archivos protegidos.
+- **Creación Personalizada de Nuevos Archivos de Texto (.txt, .json, .md, .xml, .kt...):**
+  - Menú desplegable desde el botón FAB (+) con opciones para crear tanto "Nueva Carpeta" como "Nuevo Archivo" con extensión y contenido inicial personalizado.
 - **Navegación y Exploración Interna 100% REAL de Archivos ZIP / 7Z / TAR / APK:**
   - Inspección directa de la estructura jerárquica interna de contenedores comprimidos sin necesidad de extraer previamente en disco.
   - Navegación multinivel por carpetas y subdirectorios internos dentro del archivo comprimido con barra de migas de pan (Breadcrumbs) interactiva.

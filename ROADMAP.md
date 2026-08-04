@@ -30,7 +30,7 @@ Este archivo documenta los hitos completados y la hoja de ruta para futuras vers
 - [x] Refinamiento de UI minimalista: reducción de densidad en filas de archivos (`FileItemRow`), tarjetas de almacenamiento sutiles y migas de pan impecables.
 - [x] Visor y explorador navegable 100% REAL del contenido de archivos `.zip`, `.7z`, `.tar.gz`, `.apk` y `.jar` con lectura en memoria de archivos de texto.
 - [x] Detección de archivos ZIP/7z encriptados con indicador de candado (Lock) e ingreso automático de contraseña (`ArchivePasswordDialog`).
-- [x] Modo de Selección Múltiple (Multi-Select) para mover (`executeBatchMove`), copiar (`executeBatchCopy`) o eliminar (`executeBatchDelete`) lotes de archivos con diálogo de exploración de carpetas (`FolderPickerDialog`).
+- [x] Modo de Selección Múltiple (Multi-Select) activable mediante toque rápido en el ícono del archivo o pulsación larga para mover (`executeBatchMove`), copiar (`executeBatchCopy`), comprimir en lote (`compressBatchSelectedItems`) o eliminar (`executeBatchDelete`) con diálogo de exploración de carpetas (`FolderPickerDialog`).
 - [x] Creación de archivos de texto con nombres y extensiones personalizadas (`.txt`, `.json`, `.md`, `.xml`, etc.) desde el menú de acción flotante (FAB).
 - [x] Visor nativo de claves privadas y certificados PEM (`.pem`, `.key`, `.crt`, `.pub`, `.p8`).
 - [x] Automatización CI/CD con GitHub Actions (firma en caliente de APK Debug, caché de Gradle/Cargo y flujo de auto-descompresión ZIP con GitHub App Bot).
