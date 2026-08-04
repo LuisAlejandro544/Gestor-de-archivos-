@@ -33,6 +33,9 @@ Este archivo documenta los hitos completados y la hoja de ruta para futuras vers
 - [x] Modo de Selección Múltiple (Multi-Select) activable mediante toque rápido en el ícono del archivo o pulsación larga para mover (`executeBatchMove`), copiar (`executeBatchCopy`), comprimir en lote (`compressBatchSelectedItems`) o eliminar (`executeBatchDelete`) con diálogo de exploración de carpetas (`FolderPickerDialog`).
 - [x] Creación de archivos de texto con nombres y extensiones personalizadas (`.txt`, `.json`, `.md`, `.xml`, etc.) desde el menú de acción flotante (FAB).
 - [x] Visor nativo de claves privadas y certificados PEM (`.pem`, `.key`, `.crt`, `.pub`, `.p8`).
+- [x] Integración con LibArchive Nativa (NDK C++) para manejo avanzado de contenedores y compresión/descompresión multinivel.
+- [x] Cálculo de Hashes Acelerado por Hardware mediante instrucciones vectoriales ARM NEON / SIMD (`__builtin_arm_crc32`) para verificación ultrarrápida de integridad (CRC32/SHA-256).
+- [x] Parser Ultra-Rápido de JSON / Markdown integrado con la librería `serde_json` de Rust y motor C++ nativo para análisis y validación sin sobrecarga JVM.
 - [x] Automatización CI/CD con GitHub Actions (firma en caliente de APK Debug, caché de Gradle/Cargo y flujo de auto-descompresión ZIP con GitHub App Bot).
 
 ## 🟡 Fase 3: Características Avanzadas (PRÓXIMAMENTE)

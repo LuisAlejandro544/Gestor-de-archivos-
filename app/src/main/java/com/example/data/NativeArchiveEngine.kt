@@ -27,6 +27,35 @@ class NativeArchiveEngine {
     private external fun compressCoreCPP(sourcePath: String, destZipPath: String, threadCount: Int): Boolean
     private external fun getEngineVersionRust(): String
     private external fun compressCoreRust(sourcePath: String, destZipPath: String, secondaryCores: Int): Boolean
+    private external fun computeHardwareHashNEON(filePath: String): String
+    private external fun parseJsonFastCPP(jsonContent: String): Boolean
+    private external fun parseJsonFastRust(jsonStr: String): Boolean
+
+    fun computeFastHardwareHash(filePath: String): String {
+        return if (isCppLoaded) {
+            try {
+                computeHardwareHashNEON(filePath)
+            } catch (e: Throwable) {
+                "UNKNOWN_HASH"
+            }
+        } else {
+            "SIMD_UNAVAILABLE"
+        }
+    }
+
+    fun validateJsonFast(jsonContent: String): Boolean {
+        return try {
+            if (isRustLoaded) {
+                parseJsonFastRust(jsonContent)
+            } else if (isCppLoaded) {
+                parseJsonFastCPP(jsonContent)
+            } else {
+                jsonContent.trim().let { it.startsWith("{") && it.endsWith("}") || it.startsWith("[") && it.endsWith("]") }
+            }
+        } catch (e: Throwable) {
+            false
+        }
+    }
 
     suspend fun compressFiles(
         sourceItems: List<FileItem>,

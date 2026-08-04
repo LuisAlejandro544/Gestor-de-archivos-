@@ -29,6 +29,10 @@ class FileManagerViewModel(application: Application) : AndroidViewModel(applicat
         loadDirectory(root)
     }
 
+    fun setHasStoragePermission(granted: Boolean) {
+        _uiState.update { it.copy(hasStoragePermission = granted) }
+    }
+
     private fun loadStorageInfo() {
         viewModelScope.launch {
             val info = repository.getStorageInfo()

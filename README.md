@@ -47,8 +47,10 @@ Un gestor de archivos y motor de compresión de alto rendimiento diseñado para 
   - Las tareas de compresión y descompresión pesadas no congelan la interfaz de usuario, ejecutándose en un pool de hilos asignados a núcleos secundarios de la CPU.
 - **Motores Nativos Multi-Lenguaje (C++ / Rust / Zip4j):**
   - **Zip4j AES Engine:** Algoritmo Deflate puro con cifrado de alto nivel AES-256 para `.zip`.
-  - **C++ (NDK LibArchive / Pthreads):** Soporte multi-hilo para formatos `.rar`, `.tar.gz`.
-  - **Rust (LZMA2 / Rayon Threadpool):** Algoritmos de alta densidad para formato `.7z`.
+  - **Integración con LibArchive Nativa (C++ NDK):** Manejo directo de contenedores multinivel y compresión/descompresión optimizada en C++ con hilos Pthreads para formatos `.rar`, `.tar.gz`, `.tar.bz2`, `.iso`, `.7z`.
+  - **Cálculo de Hashes Acelerado por Hardware (ARM NEON / SIMD):** Rutinas nativas en C++ y Rust utilizando instrucciones de hardware vectoriales ARMv8 NEON (`__builtin_arm_crc32`) y SIMD para verificación ultrarrápida de integridad (CRC32, SHA-256) sin sobrecargar la CPU.
+  - **Parser Ultra-Rápido de JSON / Markdown (`serde_json` Rust Engine):** Integración nativa de la librería `serde_json` en Rust y parsing nativo en C++ para validación, formateo y renderizado de sintaxis JSON y Markdown a velocidad nativa sin sobrecarga en la JVM.
+  - **Rust (LZMA2 / Rayon Threadpool):** Algoritmos de alta densidad para formato `.7z` con hilos paralelos Rayon.
 - **Extracción de Logos e Íconos de APKs Real:**
   - Decodificación y carga dinámica en tiempo real del ícono original de aplicaciones y juegos Android contenidas dentro de archivos `.apk`.
 - **Visor Nativo de Claves y Certificados PEM:**

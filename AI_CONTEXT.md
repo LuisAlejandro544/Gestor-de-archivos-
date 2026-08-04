@@ -13,8 +13,8 @@ Este archivo proporciona contexto técnico profundo a modelos de lenguaje (LLMs)
 - **Arquitectura UI:** MVVM (Model-View-ViewModel) con `AndroidViewModel`
 - **Librería de Cifrado ZIP:** `Zip4j` (`net.lingala.zip4j`) con cifrado militar AES-256 bits y algoritmos Deflate/Fastest/Ultra.
 - **Módulos Nativos:**
-  - **C++ (NDK CMake):** `app/src/main/cpp/native-archive.cpp`
-  - **Rust (Cargo):** `rust-native/src/lib.rs`
+  - **C++ (NDK CMake):** `app/src/main/cpp/native-archive.cpp` — Motor C++ LibArchive nativo con paralelismo Pthreads, aceleración vectorial ARM NEON SIMD (`__builtin_arm_crc32`) para cálculo de hashes de ultra alta velocidad y validación de sintaxis nativa.
+  - **Rust (Cargo):** `rust-native/src/lib.rs` — Módulo nativo Rust con `serde_json` para análisis ultra-rápido de JSON/Markdown y hilos paralelos Rayon/LZMA2.
 - **Decodificación de Recursos:** `PackageManager.getPackageArchiveInfo` + `produceState` para la extracción de logotipos en archivos `.apk`.
 
 ---

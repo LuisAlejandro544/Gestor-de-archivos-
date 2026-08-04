@@ -56,5 +56,7 @@ data class FileManagerUiState(
     // Password Prompt State
     val showPasswordPromptDialog: Boolean = false,
     val passwordPromptItem: FileItem? = null,
-    val passwordPromptAction: ArchivePasswordAction = ArchivePasswordAction.VIEW
+    val passwordPromptAction: ArchivePasswordAction = ArchivePasswordAction.VIEW,
+    // Storage Permission state
+    val hasStoragePermission: Boolean = false
 )

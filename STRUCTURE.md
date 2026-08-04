@@ -15,7 +15,7 @@ Este documento describe la organización jerárquica de archivos y carpetas del 
 │           ├── AndroidManifest.xml    # Permisos de almacenamiento y componentes
 │           ├── cpp/                   # Código Nativo C++
 │           │   ├── CMakeLists.txt     # Script de construcción CMake para NDK
-│           │   └── native-archive.cpp # Implementación JNI en C++ (Multi-Core Pthreads)
+│           │   └── native-archive.cpp # Implementación JNI C++ (LibArchive Native, Pthreads Pool, Hashes ARM NEON SIMD)
 │           ├── java/com/example/
 │           │   ├── MainActivity.kt    # Entry Point con permisos runtime Android R+
 │           │   ├── data/
@@ -64,9 +64,9 @@ Este documento describe la organización jerárquica de archivos y carpetas del 
 │           │       └── ApkIconUtils.kt            # Decodificador de íconos nativos para archivos .apk
 │           └── res/                   # Recursos visuales, valores e íconos adaptativos
 ├── rust-native/                       # Módulo Nativo en Rust
-│   ├── Cargo.toml                     # Configuración de librerías Cargo (JNI, Rayon, Flate2)
+│   ├── Cargo.toml                     # Configuración de librerías Cargo (JNI, Rayon, Flate2, Serde JSON)
 │   └── src/
-│       └── lib.rs                     # Implementación JNI en Rust con paralelismo Rayon
+│       └── lib.rs                     # Implementación JNI en Rust (Paralelismo Rayon, Parser Serde JSON)
 ├── build.gradle.kts                   # Build gradle raíz del proyecto
 ├── settings.gradle.kts                # Inclusión de proyectos y repositorios (rootProject.name = "ArchivoX")
 ├── metadata.json                      # Metadatos para la plataforma AI Studio
