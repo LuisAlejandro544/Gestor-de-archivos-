@@ -6,62 +6,13 @@ import androidx.lifecycle.viewModelScope
 import com.example.data.*
 import com.example.ui.theme.AppColorPalette
 import com.example.ui.theme.ThemeMode
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-
-enum class FolderPickerAction { MOVE, COPY }
-enum class ArchivePasswordAction { VIEW, EXTRACT }
-
-data class FileManagerUiState(
-    val rootPath: String = "",
-    val currentPath: String = "",
-    val breadcrumbs: List<PathSegment> = emptyList(),
-    val rawItems: List<FileItem> = emptyList(),
-    val items: List<FileItem> = emptyList(),
-    val storageInfo: StorageInfo = StorageInfo(),
-    val searchQuery: String = "",
-    val selectedCategory: StorageCategory = StorageCategory.ALL,
-    val sortType: FileSortType = FileSortType.NAME_ASC,
-    val viewMode: ViewMode = ViewMode.LIST,
-    val showHiddenFiles: Boolean = false,
-    val isLoading: Boolean = false,
-    val selectedItem: FileItem? = null,
-    val showCreateFolderDialog: Boolean = false,
-    val showCreateFileDialog: Boolean = false,
-    val showRenameDialog: Boolean = false,
-    val showDeleteDialog: Boolean = false,
-    val showCompressDialog: Boolean = false,
-    val showExtractDialog: Boolean = false,
-    val showSettingsSheet: Boolean = false,
-    val showSortMenu: Boolean = false,
-    val showPemViewerDialog: Boolean = false,
-    val selectedPemItem: FileItem? = null,
-    val appPalette: AppColorPalette = AppColorPalette.EMERALD,
-    val themeMode: ThemeMode = ThemeMode.DARK,
-    val compressionProgress: CompressionProgress = CompressionProgress(),
-    val showCompressionProgressDialog: Boolean = false,
-    val isArchivoXTextInstalled: Boolean = false,
-    val showTextExtensionInstallDialog: Boolean = false,
-    val textExtensionProgress: Int = 0,
-    val textExtensionStatus: String = "",
-    val showTextViewerDialog: Boolean = false,
-    val selectedTextItem: FileItem? = null,
-    val showZipExplorerDialog: Boolean = false,
-    val selectedZipItem: FileItem? = null,
-    val userMessage: String? = null,
-    // Multi-selection state
-    val isMultiSelectMode: Boolean = false,
-    val selectedPaths: Set<String> = emptySet(),
-    val showFolderPickerDialog: Boolean = false,
-    val folderPickerAction: FolderPickerAction = FolderPickerAction.MOVE,
-    // Password Prompt State
-    val showPasswordPromptDialog: Boolean = false,
-    val passwordPromptItem: FileItem? = null,
-    val passwordPromptAction: ArchivePasswordAction = ArchivePasswordAction.VIEW
-)
+import java.io.File
 
 class FileManagerViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -97,7 +48,7 @@ class FileManagerViewModel(application: Application) : AndroidViewModel(applicat
                     currentPath = path,
                     breadcrumbs = breadcrumbs,
                     rawItems = files,
-                    items = filterAndSortItems(files, state.searchQuery, state.selectedCategory, state.sortType)
+                    items = FileManagerFilterAndSort.filterAndSortItems(files, state.searchQuery, state.selectedCategory, state.sortType)
                 )
             }
         }
@@ -113,7 +64,7 @@ class FileManagerViewModel(application: Application) : AndroidViewModel(applicat
         if (current == root || current.length <= root.length) {
             return false
         }
-        val parent = java.io.File(current).parent
+        val parent = File(current).parent
         if (parent != null && parent.length >= root.length) {
             loadDirectory(parent)
             return true
@@ -125,7 +76,7 @@ class FileManagerViewModel(application: Application) : AndroidViewModel(applicat
         _uiState.update { state ->
             state.copy(
                 searchQuery = query,
-                items = filterAndSortItems(state.rawItems, query, state.selectedCategory, state.sortType)
+                items = FileManagerFilterAndSort.filterAndSortItems(state.rawItems, query, state.selectedCategory, state.sortType)
             )
         }
     }
@@ -134,7 +85,7 @@ class FileManagerViewModel(application: Application) : AndroidViewModel(applicat
         _uiState.update { state ->
             state.copy(
                 selectedCategory = category,
-                items = filterAndSortItems(state.rawItems, state.searchQuery, category, state.sortType)
+                items = FileManagerFilterAndSort.filterAndSortItems(state.rawItems, state.searchQuery, category, state.sortType)
             )
         }
     }
@@ -144,7 +95,7 @@ class FileManagerViewModel(application: Application) : AndroidViewModel(applicat
             state.copy(
                 sortType = sortType,
                 showSortMenu = false,
-                items = filterAndSortItems(state.rawItems, state.searchQuery, state.selectedCategory, sortType)
+                items = FileManagerFilterAndSort.filterAndSortItems(state.rawItems, state.searchQuery, state.selectedCategory, sortType)
             )
         }
     }
@@ -244,21 +195,21 @@ class FileManagerViewModel(application: Application) : AndroidViewModel(applicat
                     textExtensionStatus = "Descargando paquete de extensión ArchivoX Text v1.0 (1.2 MB)..."
                 )
             }
-            kotlinx.coroutines.delay(600)
+            delay(600)
             _uiState.update {
                 it.copy(
                     textExtensionProgress = 35,
                     textExtensionStatus = "Descomprimiendo motor nativo de lectura TXT & Markdown UTF-8..."
                 )
             }
-            kotlinx.coroutines.delay(700)
+            delay(700)
             _uiState.update {
                 it.copy(
                     textExtensionProgress = 75,
                     textExtensionStatus = "Registrando módulo de extensión 'ArchivoX Text'..."
                 )
             }
-            kotlinx.coroutines.delay(500)
+            delay(500)
             _uiState.update {
                 it.copy(
                     textExtensionProgress = 100,
@@ -294,7 +245,7 @@ class FileManagerViewModel(application: Application) : AndroidViewModel(applicat
                 showMessage("Archivo '$trimmedName' creado correctamente")
                 setShowCreateFileDialog(false)
                 loadDirectory(current)
-                val createdFile = java.io.File(current, trimmedName)
+                val createdFile = File(current, trimmedName)
                 val ext = createdFile.extension.lowercase()
                 if (ext in listOf("txt", "md", "json", "xml", "kt", "java", "py", "sh", "html", "css", "js", "ts", "cpp", "c", "sql")) {
                     val fileItem = FileItem(
@@ -509,7 +460,7 @@ class FileManagerViewModel(application: Application) : AndroidViewModel(applicat
         val currentDir = _uiState.value.currentPath
         val destPath = if (splitSizeMb > 0) {
             val partsFolderName = targetArchiveName.substringBeforeLast(".") + "_partes"
-            val partsDir = java.io.File(currentDir, partsFolderName)
+            val partsDir = File(currentDir, partsFolderName)
             if (!partsDir.exists()) partsDir.mkdirs()
             "${partsDir.absolutePath}/$targetArchiveName"
         } else {
@@ -550,7 +501,7 @@ class FileManagerViewModel(application: Application) : AndroidViewModel(applicat
         val currentDir = _uiState.value.currentPath
         val destPath = if (splitSizeMb > 0) {
             val partsFolderName = targetArchiveName.substringBeforeLast(".") + "_partes"
-            val partsDir = java.io.File(currentDir, partsFolderName)
+            val partsDir = File(currentDir, partsFolderName)
             if (!partsDir.exists()) partsDir.mkdirs()
             "${partsDir.absolutePath}/$targetArchiveName"
         } else {
@@ -605,54 +556,5 @@ class FileManagerViewModel(application: Application) : AndroidViewModel(applicat
 
     private fun showMessage(msg: String) {
         _uiState.update { it.copy(userMessage = msg) }
-    }
-
-    private fun filterAndSortItems(
-        raw: List<FileItem>,
-        query: String,
-        category: StorageCategory,
-        sortType: FileSortType
-    ): List<FileItem> {
-        var result = raw
-
-        if (category != StorageCategory.ALL) {
-            result = result.filter { item ->
-                when (category) {
-                    StorageCategory.FOLDERS -> item.isDirectory
-                    StorageCategory.DOWNLOADS -> item.path.contains("Download", ignoreCase = true) || item.fileType == FileType.ARCHIVE
-                    StorageCategory.DOCUMENTS -> item.fileType == FileType.DOCUMENT
-                    StorageCategory.IMAGES -> item.fileType == FileType.IMAGE
-                    StorageCategory.AUDIO -> item.fileType == FileType.AUDIO
-                    StorageCategory.VIDEOS -> item.fileType == FileType.VIDEO
-                    StorageCategory.ARCHIVES -> item.fileType == FileType.ARCHIVE
-                    else -> true
-                }
-            }
-        }
-
-        if (query.isNotBlank()) {
-            val q = query.trim().lowercase()
-            result = result.filter { it.name.lowercase().contains(q) }
-        }
-
-        val folders = result.filter { it.isDirectory }
-        val files = result.filter { !it.isDirectory }
-
-        val sortedFolders = sortItemList(folders, sortType)
-        val sortedFiles = sortItemList(files, sortType)
-
-        return sortedFolders + sortedFiles
-    }
-
-    private fun sortItemList(list: List<FileItem>, sortType: FileSortType): List<FileItem> {
-        return when (sortType) {
-            FileSortType.NAME_ASC -> list.sortedBy { it.name.lowercase() }
-            FileSortType.NAME_DESC -> list.sortedByDescending { it.name.lowercase() }
-            FileSortType.SIZE_ASC -> list.sortedBy { it.sizeBytes }
-            FileSortType.SIZE_DESC -> list.sortedByDescending { it.sizeBytes }
-            FileSortType.DATE_ASC -> list.sortedBy { it.lastModified }
-            FileSortType.DATE_DESC -> list.sortedByDescending { it.lastModified }
-            FileSortType.TYPE_ASC -> list.sortedBy { it.fileType.name }
-        }
     }
 }

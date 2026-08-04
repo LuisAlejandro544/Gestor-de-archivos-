@@ -19,25 +19,33 @@ Este documento describe la organización jerárquica de archivos y carpetas del 
 │           ├── java/com/example/
 │           │   ├── MainActivity.kt    # Entry Point con permisos runtime Android R+
 │           │   ├── data/
+│           │   │   ├── ArchiveCompressor.kt # Motor de compresión multi-formato (7z LZMA2, TarGz, Zip4j AES-256)
+│           │   │   ├── ArchiveExtractor.kt  # Motor de descompresión y extracción multi-formato
+│           │   │   ├── ArchiveSplitter.kt   # Utilidad de división de archivos en partes/volúmenes
 │           │   │   ├── CompressionModels.kt # Enums y Data Class (CompressionFormat, CompressionLevel, CompressionProgress)
 │           │   │   ├── FileItem.kt    # Modelo de datos para archivos y carpetas
 │           │   │   ├── FileRepository.kt # Repositorio de lectura y operaciones I/O
-│           │   │   ├── NativeArchiveEngine.kt # Motor JNI / Zip4j AES-256 / Coroutines C++ y Rust
-│           │   │   └── ZipViewerEngine.kt     # Motor de inspección, árbol de directorios y lectura interna de ZIP/7z/Tar/APK
+│           │   │   ├── NativeArchiveEngine.kt # Fachada JNI (C++/Rust) y punto de entrada de compresión
+│           │   │   └── ZipViewerEngine.kt     # Motor de inspección, árbol de directorios y lectura interna
 │           │   ├── ui/
-│           │   │   ├── FileManagerViewModel.kt # ViewModel principal y UI State
-│           │   │   ├── FileManagerScreen.kt    # Composable raíz de la interfaz ArchivoX
+│           │   │   ├── FileManagerFilterAndSort.kt # Lógica modular de filtrado y ordenación
+│           │   │   ├── FileManagerUiState.kt    # Estado de la UI inmutable (FileManagerUiState) y enums de acción
+│           │   │   ├── FileManagerViewModel.kt  # ViewModel principal
+│           │   │   ├── FileManagerScreen.kt     # Composable raíz de la interfaz ArchivoX
 │           │   │   ├── components/
 │           │   │   │   ├── ArchivoXTextViewerDialog.kt # Editor y visor en pantalla completa de archivos TXT y MD
+│           │   │   │   ├── ArchivePasswordDialog.kt   # Diálogo para ingresar contraseña de archivos protegidos
 │           │   │   │   ├── BreadcrumbBar.kt       # Navegación por rutas de archivos
 │           │   │   │   ├── CompressFileDialog.kt  # Diálogo de compresión con opciones de formato, nivel y clave AES-256
 │           │   │   │   ├── CompressionProgressDialog.kt # Diálogo modal con consola de logs de compresión en tiempo real
 │           │   │   │   ├── ExtractArchiveDialog.kt # Diálogo de extracción de archivos comprimidos
-│           │   │   │   ├── FileActionDialogs.kt   # Hoja de acciones (Renombrar, Eliminar, Detalle, Crear Archivo, Selector de Carpeta, Clave ZIP)
+│           │   │   │   ├── FileActionDialogs.kt   # Diálogos de creación de carpeta, renombrado, eliminación y nuevo archivo
+│           │   │   │   ├── FileDetailsBottomSheet.kt # Hoja de detalles y acciones principales sobre un archivo
 │           │   │   │   ├── FileManagerEmptyState.kt # Componente visual de estado de carpeta vacía
 │           │   │   │   ├── FileManagerTopBar.kt   # Barra superior con búsqueda, ordenación y cambio de vista
 │           │   │   │   ├── FileItemCard.kt        # Vista en Cuadrícula (Grid Card)
 │           │   │   │   ├── FileItemRow.kt         # Vista en Lista
+│           │   │   │   ├── FolderPickerDialog.kt   # Diálogo selector de destino para mover o copiar elementos
 │           │   │   │   ├── PemViewerDialog.kt     # Visor Nativo de Claves y Certificados PEM
 │           │   │   │   ├── SettingsSheet.kt       # Hoja de configuración de temas y paletas
 │           │   │   │   ├── StorageHeader.kt       # Card de espacio de almacenamiento y filtros
@@ -46,7 +54,7 @@ Este documento describe la organización jerárquica de archivos y carpetas del 
 │           │   │   │   ├── TextMode.kt            # Enum de modo de lectura/edición (PREVIEW, EDIT)
 │           │   │   │   ├── TextRenderers.kt       # Renderizadores de texto plano con numeración de líneas y Markdown
 │           │   │   │   ├── ZipEntryRow.kt         # Fila e íconos para elementos dentro de archivos comprimidos
-│           │   │   │   └── ZipExplorerDialog.kt    # Diálogo modal de navegación y exploración interna de archivos .ZIP/7Z/APK
+│           │   │   │   └── ZipExplorerDialog.kt    # Diálogo modal de navegación y exploración interna
 │           │   │   └── theme/
 │           │   │       ├── Color.kt               # Paletas Verde Esmeralda, AMOLED y Light
 │           │   │       ├── Theme.kt               # Composable de tema dinámico M3
@@ -72,11 +80,13 @@ Este documento describe la organización jerárquica de archivos y carpetas del 
 
 ## Aspectos Clave de la Arquitectura
 
-1. **Separación de Responsabilidades (MVVM):**
-   - El estado de la pantalla está centralizado en `FileManagerUiState` inmutable.
-   - `FileManagerViewModel` coordina la carga de almacenamiento, selección de temas y despacho de tareas de compresión.
+1. **Separación de Responsabilidades (MVVM & Desarrollo Modular):**
+   - El estado de la pantalla está centralizado en `FileManagerUiState` (`FileManagerUiState.kt`).
+   - `FileManagerViewModel` coordina las operaciones, delegando el filtrado/ordenado a `FileManagerFilterAndSort.kt`.
+   - Componentes UI de acción modularizados (`FileDetailsBottomSheet`, `FolderPickerDialog`, `ArchivePasswordDialog`, `FileActionDialogs`).
 
 2. **Cifrado AES-256 & Multiprocesamiento C++ / Rust / Zip4j:**
-   - Cifrado seguro de archivos ZIP mediante la integración con `Zip4j` en `NativeArchiveEngine.kt`.
+   - Cifrado seguro de archivos ZIP mediante la integración con `Zip4j` en `ArchiveCompressor.kt`.
+   - Descomprimidor y extractor delegados en `ArchiveExtractor.kt`.
+   - Preservación de firmas JNI externas en `NativeArchiveEngine.kt` para interoperabilidad con C++ y Rust.
    - Las operaciones de compresión crean un grupo de hilos dedicados (`Executors.newFixedThreadPool`) para delegar el trabajo a núcleos secundarios de la CPU sin bloquear el hilo principal.
-
