@@ -79,23 +79,40 @@ fun ZipEntryRow(
                 }
             }
 
-            if (entry.isDirectory) {
-                Icon(
-                    imageVector = Icons.Default.ChevronRight,
-                    contentDescription = "Abrir carpeta",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            } else {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(2.dp)
+            ) {
                 IconButton(
-                    onClick = onClick,
-                    modifier = Modifier.size(32.dp)
+                    onClick = onExtractItem,
+                    modifier = Modifier.size(34.dp)
                 ) {
                     Icon(
-                        imageVector = if (isTextFileExtension(entry.extension)) Icons.Default.Visibility else Icons.Default.Info,
-                        contentDescription = "Ver",
+                        imageVector = Icons.Default.Download,
+                        contentDescription = "Copiar o extraer sin descomprimir todo",
                         tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(18.dp)
                     )
+                }
+
+                if (entry.isDirectory) {
+                    Icon(
+                        imageVector = Icons.Default.ChevronRight,
+                        contentDescription = "Abrir carpeta",
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                } else if (isTextFileExtension(entry.extension)) {
+                    IconButton(
+                        onClick = onClick,
+                        modifier = Modifier.size(34.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Visibility,
+                            contentDescription = "Ver contenido",
+                            tint = MaterialTheme.colorScheme.secondary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
                 }
             }
         }

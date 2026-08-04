@@ -18,15 +18,17 @@ Un gestor de archivos y motor de compresión de alto rendimiento diseñado para 
   - Menú desplegable desde el botón FAB (+) con opciones para crear tanto "Nueva Carpeta" como "Nuevo Archivo" con extensión y contenido inicial personalizado.
 - **Navegación y Exploración Interna 100% REAL de Archivos ZIP / 7Z / TAR / APK:**
   - Inspección directa de la estructura jerárquica interna de contenedores comprimidos sin necesidad de extraer previamente en disco.
+  - **Extracción Directa de Archivo Individual:** Permite extraer o copiar un archivo específico desde el interior de contenedores `.zip`, `.7z`, `.tar.gz`, `.apk` o `.xapk` hacia el directorio actual con un solo toque, sin necesidad de descomprimir el contenedor completo.
   - Navegación multinivel por carpetas y subdirectorios internos dentro del archivo comprimido con barra de migas de pan (Breadcrumbs) interactiva.
   - Previsualización en tiempo real de archivos de texto (`.txt`, `.json`, `.kt`, `.java`, `.md`, `.xml`, `.gradle`, `.sql`) leídos directamente desde la memoria RAM del archivo ZIP.
   - Búsqueda interna filtrada de elementos dentro del archivo comprimido.
   - Compatible con formatos `.zip`, `.7z`, `.tar.gz`, `.apk`, `.jar`, `.xapk` y archivos cifrados con contraseña AES-256.
 - **Editor y Visor en Pantalla Completa ArchivoX Text v1.2 (.txt / .md / .json):**
   - Editor y visor independiente en pantalla completa (independiente de diálogos flotantes) para lectura y edición en tiempo real de archivos `.txt`, `.md` y `.json`.
-  - Soporte exclusivo para archivos `.json` con renderizado resaltado sintáctico (claves en dorado, cadenas en verde, números y booleanos en violeta), insignia de validación de sintaxis en tiempo real (`✓ JSON Válido` / `⚠️ Sintaxis Errónea`) y botón de formateo automático (Indent 2 espacios).
+  - Soporte exclusivo para archivos `.json` con renderizado resaltado sintáctico (claves en dorado, cadenas en verde, números y booleanos en violeta), validación asíncrona mediante hilo secundario / motor NDK (`✓ JSON Válido`) y botón de formateo automático (Indent 2 espacios) ejecutado en segundo plano.
+  - Renderizado mediante listas perezosas (`LazyColumn`) para desplazamiento suave e instantáneo incluso en archivos con miles de líneas.
   - Modo Edición con guardado directo en almacenamiento local, indicador visual de cambios no guardados y prevención de pérdidas.
-  - Alternancia fluida entre Modo Lectura (con renderizado de Markdown enriquecido, JSON estructurado o texto plano con numeración de líneas) y Modo Editor.
+  - Alternancia fluida entre Modo Lectura (con renderizado de Markdown enriquecido, JSON estructurado o texto plano con numeración de líneas) y Modo Editor con interfaz adaptada de botones segmentados M3 (`SegmentedButton`).
   - Barra de estado inferior con contadores en tiempo real de líneas, palabras, caracteres y tipo de codificación (UTF-8).
   - Herramientas de ajuste tipográfico (tamaño de fuente en sp, fuente monoespaciada/sans), búsqueda con resaltado de coincidencias y copiado al portapapeles.
 - **Compresión con Partición en Partes (Split Volumes) y Opciones Avanzadas:**

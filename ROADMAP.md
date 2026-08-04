@@ -36,6 +36,9 @@ Este archivo documenta los hitos completados y la hoja de ruta para futuras vers
 - [x] Integración con LibArchive Nativa (NDK C++) para manejo avanzado de contenedores y compresión/descompresión multinivel.
 - [x] Cálculo de Hashes Acelerado por Hardware mediante instrucciones vectoriales ARM NEON / SIMD (`__builtin_arm_crc32`) para verificación ultrarrápida de integridad (CRC32/SHA-256).
 - [x] Parser Ultra-Rápido de JSON / Markdown integrado con la librería `serde_json` de Rust y motor C++ nativo para análisis y validación sin sobrecarga JVM.
+- [x] Optimización de renderizado perezoso (`LazyColumn`), formateo y validación de JSON multi-hilo en segundo plano (`Dispatchers.Default` / NDK) para evitar congelamientos en archivos grandes.
+- [x] Corrección visual de interfaz M3 en `TextEditorControlBar` (`SegmentedButton` con slots `icon` y `label` independientes).
+- [x] Extracción individual directa de archivos dentro de contenedores `.zip`, `.7z`, `.tar.gz`, `.apk` o `.xapk` sin necesidad de descomprimir el archivo completo.
 - [x] Automatización CI/CD con GitHub Actions (firma en caliente de APK Debug, caché de Gradle/Cargo y flujo de auto-descompresión ZIP con GitHub App Bot).
 
 ## 🟡 Fase 3: Características Avanzadas (PRÓXIMAMENTE)

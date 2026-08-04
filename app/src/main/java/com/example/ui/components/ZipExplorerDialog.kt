@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import kotlinx.coroutines.launch
 import com.example.data.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -36,9 +37,11 @@ fun ZipExplorerDialog(
     zipItem: FileItem,
     currentDir: String,
     onDismiss: OnDismiss,
-    onExtractAllClick: () -> Unit
+    onExtractAllClick: () -> Unit,
+    onExtractSingleEntry: () -> Unit = {}
 ) {
     val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
     val engine = remember { ZipViewerEngine() }
 
     var innerPath by remember { mutableStateOf("") }
@@ -291,26 +294,43 @@ fun ZipExplorerDialog(
                                         onClick = {
                                             if (entry.isDirectory) {
                                                 innerPath = entry.fullPath
+                                            } else if (isTextFileExtension(entry.extension)) {
+                                                previewEntryName = entry.name
                                             } else {
-                                                // Preview or options
-                                                if (isTextFileExtension(entry.extension)) {
-                                                    previewEntryName = entry.name
-                                                    isPreviewLoading = true
-                                                    kotlinx.coroutines.GlobalScope.run {
-                                                        // Handled in LaunchedEffect below
-                                                    }
-                                                } else {
-                                                    Toast.makeText(
-                                                        context,
-                                                        "Elemento: ${entry.name} (${entry.formattedSize})",
-                                                        Toast.LENGTH_SHORT
-                                                    ).show()
-                                                }
+                                                Toast.makeText(
+                                                    context,
+                                                    "Elemento: ${entry.name} (${entry.formattedSize})",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
                                             }
                                         },
                                         onExtractItem = {
-                                            kotlinx.coroutines.GlobalScope.run {
-                                                // Handled in Extract LaunchedEffect below
+                                            coroutineScope.launch {
+                                                Toast.makeText(
+                                                    context,
+                                                    "Copiando '${entry.name}' sin descomprimir todo...",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                                val success = engine.extractZipEntry(
+                                                    zipFilePath = zipItem.path,
+                                                    entryFullPath = entry.fullPath,
+                                                    destDirectoryPath = currentDir,
+                                                    password = if (password.isBlank()) null else password
+                                                )
+                                                if (success) {
+                                                    Toast.makeText(
+                                                        context,
+                                                        "¡'${entry.name}' extraído con éxito en el directorio actual!",
+                                                        Toast.LENGTH_LONG
+                                                    ).show()
+                                                    onExtractSingleEntry()
+                                                } else {
+                                                    Toast.makeText(
+                                                        context,
+                                                        "Error al extraer '${entry.name}'",
+                                                        Toast.LENGTH_LONG
+                                                    ).show()
+                                                }
                                             }
                                         }
                                     )

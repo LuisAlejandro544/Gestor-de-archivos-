@@ -457,6 +457,9 @@ fun FileManagerScreen(
                 viewModel.selectItemForAction(uiState.selectedZipItem)
                 viewModel.closeZipExplorer()
                 viewModel.setShowExtractDialog(true)
+            },
+            onExtractSingleEntry = {
+                viewModel.loadDirectory(uiState.currentPath)
             }
         )
     }

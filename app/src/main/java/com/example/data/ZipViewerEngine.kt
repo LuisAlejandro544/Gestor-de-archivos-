@@ -375,43 +375,121 @@ class ZipViewerEngine {
         val destDir = File(destDirectoryPath)
         if (!destDir.exists()) destDir.mkdirs()
 
-        try {
-            val zip4j = if (!password.isNullOrBlank()) {
-                Zip4jFile(archiveFile, password.toCharArray())
-            } else {
-                Zip4jFile(archiveFile)
-            }
+        val lowerName = archiveFile.name.lowercase()
+        val targetNormPath = entryFullPath.replace('\\', '/').trim('/')
 
-            if (zip4j.isValidZipFile) {
-                val header = zip4j.fileHeaders.firstOrNull {
-                    it.fileName.replace('\\', '/').trim('/') == entryFullPath.trim('/')
+        try {
+            if (lowerName.endsWith(".7z")) {
+                SevenZFile(archiveFile).use { sevenZ ->
+                    var entry: SevenZArchiveEntry? = sevenZ.nextEntry
+                    while (entry != null) {
+                        val normPath = entry.name.replace('\\', '/').trim('/')
+                        if (normPath == targetNormPath || normPath == targetNormPath.removeSuffix("/")) {
+                            val fileName = normPath.substringAfterLast('/')
+                            val outFile = File(destDir, if (fileName.isNotEmpty()) fileName else "extraido")
+                            if (entry.isDirectory) {
+                                outFile.mkdirs()
+                            } else {
+                                outFile.parentFile?.mkdirs()
+                                FileOutputStream(outFile).use { fos ->
+                                    val buffer = ByteArray(512 * 1024)
+                                    var len: Int
+                                    while (sevenZ.read(buffer).also { len = it } > 0) {
+                                        fos.write(buffer, 0, len)
+                                    }
+                                }
+                            }
+                            return@withContext true
+                        }
+                        entry = sevenZ.nextEntry
+                    }
                 }
-                if (header != null) {
-                    if (header.isDirectory) {
-                        zip4j.extractFile(header, destDirectoryPath)
-                    } else {
-                        val outFile = File(destDir, header.fileName.substringAfterLast('/'))
-                        zip4j.getInputStream(header).use { input ->
-                            FileOutputStream(outFile).use { output ->
-                                input.copyTo(output)
+            } else if (lowerName.endsWith(".tar.gz") || lowerName.endsWith(".tgz")) {
+                FileInputStream(archiveFile).use { fis ->
+                    GzipCompressorInputStream(BufferedInputStream(fis)).use { gzis ->
+                        TarArchiveInputStream(gzis).use { tais ->
+                            var entry: TarArchiveEntry? = tais.nextTarEntry
+                            while (entry != null) {
+                                val normPath = entry.name.replace('\\', '/').trim('/')
+                                if (normPath == targetNormPath || normPath == targetNormPath.removeSuffix("/")) {
+                                    val fileName = normPath.substringAfterLast('/')
+                                    val outFile = File(destDir, if (fileName.isNotEmpty()) fileName else "extraido")
+                                    if (entry.isDirectory) {
+                                        outFile.mkdirs()
+                                    } else {
+                                        outFile.parentFile?.mkdirs()
+                                        FileOutputStream(outFile).use { fos ->
+                                            val buffer = ByteArray(512 * 1024)
+                                            var len: Int
+                                            while (tais.read(buffer).also { len = it } > 0) {
+                                                fos.write(buffer, 0, len)
+                                            }
+                                        }
+                                    }
+                                    return@withContext true
+                                }
+                                entry = tais.nextTarEntry
                             }
                         }
                     }
-                    return@withContext true
                 }
-            }
+            } else {
+                // Zip4j / Standard ZIP / APK / JAR / XAPK
+                val zip4j = if (!password.isNullOrBlank()) {
+                    Zip4jFile(archiveFile, password.toCharArray())
+                } else {
+                    Zip4jFile(archiveFile)
+                }
 
-            // Fallback Java ZipFile
-            JavaZipFile(archiveFile).use { zipFile ->
-                val entry = zipFile.getEntry(entryFullPath) ?: zipFile.getEntry(entryFullPath.trim('/'))
-                if (entry != null) {
-                    val outFile = File(destDir, entry.name.substringAfterLast('/'))
-                    zipFile.getInputStream(entry).use { input ->
-                        FileOutputStream(outFile).use { output ->
-                            input.copyTo(output)
-                        }
+                if (zip4j.isValidZipFile) {
+                    val header = zip4j.fileHeaders.firstOrNull {
+                        val p = it.fileName.replace('\\', '/').trim('/')
+                        p == targetNormPath || p == targetNormPath.removeSuffix("/")
                     }
-                    return@withContext true
+                    if (header != null) {
+                        if (header.isDirectory) {
+                            zip4j.extractFile(header, destDirectoryPath)
+                        } else {
+                            val fileName = header.fileName.substringAfterLast('/')
+                            val outFile = File(destDir, if (fileName.isNotEmpty()) fileName else "extraido")
+                            zip4j.getInputStream(header).use { input ->
+                                FileOutputStream(outFile).use { output ->
+                                    val buffer = ByteArray(512 * 1024)
+                                    var len: Int
+                                    while (input.read(buffer).also { len = it } > 0) {
+                                        output.write(buffer, 0, len)
+                                    }
+                                }
+                            }
+                        }
+                        return@withContext true
+                    }
+                }
+
+                // Fallback Java ZipFile
+                JavaZipFile(archiveFile).use { zipFile ->
+                    val entry = zipFile.getEntry(targetNormPath)
+                        ?: zipFile.getEntry("$targetNormPath/")
+                        ?: zipFile.entries().asSequence().firstOrNull { it.name.replace('\\', '/').trim('/') == targetNormPath }
+                    if (entry != null) {
+                        val fileName = entry.name.substringAfterLast('/')
+                        val outFile = File(destDir, if (fileName.isNotEmpty()) fileName else "extraido")
+                        if (entry.isDirectory) {
+                            outFile.mkdirs()
+                        } else {
+                            outFile.parentFile?.mkdirs()
+                            zipFile.getInputStream(entry).use { input ->
+                                FileOutputStream(outFile).use { output ->
+                                    val buffer = ByteArray(512 * 1024)
+                                    var len: Int
+                                    while (input.read(buffer).also { len = it } > 0) {
+                                        output.write(buffer, 0, len)
+                                    }
+                                }
+                            }
+                        }
+                        return@withContext true
+                    }
                 }
             }
             false
