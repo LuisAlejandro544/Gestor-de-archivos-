@@ -23,6 +23,9 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.ui.text.style.TextOverflow
 import com.example.data.FileItem
 import com.example.data.ViewMode
 import com.example.ui.components.*
@@ -76,7 +79,16 @@ fun FileManagerScreen(
             )
         },
         bottomBar = {
-            if (uiState.isMultiSelectMode) {
+            if (uiState.isClipboardActive) {
+                PasteBottomBar(
+                    action = uiState.clipboardAction,
+                    itemCount = uiState.clipboardPaths.size,
+                    currentPath = uiState.currentPath,
+                    onPasteHere = { viewModel.executePaste() },
+                    onCancelPaste = { viewModel.cancelPasteMode() },
+                    onCreateFolderClick = { viewModel.setShowCreateFolderDialog(true) }
+                )
+            } else if (uiState.isMultiSelectMode) {
                 Surface(
                     tonalElevation = 8.dp,
                     shadowElevation = 8.dp,
@@ -85,26 +97,37 @@ fun FileManagerScreen(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(horizontal = 12.dp, vertical = 8.dp),
-                        horizontalArrangement = Arrangement.SpaceAround,
+                            .horizontalScroll(rememberScrollState())
+                            .padding(horizontal = 8.dp, vertical = 6.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         TextButton(
-                            onClick = { viewModel.openFolderPicker(FolderPickerAction.MOVE) },
+                            onClick = { viewModel.startPasteMode(FolderPickerAction.MOVE) },
                             enabled = uiState.selectedPaths.isNotEmpty()
                         ) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Icon(Icons.Default.DriveFileMove, contentDescription = null)
-                                Text("Mover (${uiState.selectedPaths.size})", style = MaterialTheme.typography.labelSmall)
+                                Icon(Icons.Default.DriveFileMove, contentDescription = null, modifier = Modifier.size(20.dp))
+                                Text(
+                                    text = "Mover (${uiState.selectedPaths.size})",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    maxLines = 1,
+                                    softWrap = false
+                                )
                             }
                         }
                         TextButton(
-                            onClick = { viewModel.openFolderPicker(FolderPickerAction.COPY) },
+                            onClick = { viewModel.startPasteMode(FolderPickerAction.COPY) },
                             enabled = uiState.selectedPaths.isNotEmpty()
                         ) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Icon(Icons.Default.ContentCopy, contentDescription = null)
-                                Text("Copiar (${uiState.selectedPaths.size})", style = MaterialTheme.typography.labelSmall)
+                                Icon(Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(20.dp))
+                                Text(
+                                    text = "Copiar (${uiState.selectedPaths.size})",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    maxLines = 1,
+                                    softWrap = false
+                                )
                             }
                         }
                         TextButton(
@@ -112,8 +135,13 @@ fun FileManagerScreen(
                             enabled = uiState.selectedPaths.isNotEmpty()
                         ) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Icon(Icons.Default.FolderZip, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-                                Text("Comprimir (${uiState.selectedPaths.size})", style = MaterialTheme.typography.labelSmall)
+                                Icon(Icons.Default.FolderZip, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+                                Text(
+                                    text = "Comprimir (${uiState.selectedPaths.size})",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    maxLines = 1,
+                                    softWrap = false
+                                )
                             }
                         }
                         TextButton(
@@ -122,16 +150,26 @@ fun FileManagerScreen(
                             colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
                         ) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Icon(Icons.Default.Delete, contentDescription = null)
-                                Text("Eliminar (${uiState.selectedPaths.size})", style = MaterialTheme.typography.labelSmall)
+                                Icon(Icons.Default.Delete, contentDescription = null, modifier = Modifier.size(20.dp))
+                                Text(
+                                    text = "Eliminar (${uiState.selectedPaths.size})",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    maxLines = 1,
+                                    softWrap = false
+                                )
                             }
                         }
                         TextButton(
                             onClick = { viewModel.clearSelection() }
                         ) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Icon(Icons.Default.Close, contentDescription = null)
-                                Text("Cancelar", style = MaterialTheme.typography.labelSmall)
+                                Icon(Icons.Default.Close, contentDescription = null, modifier = Modifier.size(20.dp))
+                                Text(
+                                    text = "Cancelar",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    maxLines = 1,
+                                    softWrap = false
+                                )
                             }
                         }
                     }
@@ -349,7 +387,9 @@ fun FileManagerScreen(
                 onExploreZipClick = { viewModel.openZipExplorer(item) },
                 onPemViewerClick = { viewModel.openPemViewer(item) },
                 onTextEditorClick = { viewModel.openTextFileWithExtension(item) },
-                onSelectMultiClick = { viewModel.toggleSelectPath(item.path) }
+                onSelectMultiClick = { viewModel.toggleSelectPath(item.path) },
+                onMoveClick = { viewModel.startPasteMode(FolderPickerAction.MOVE, setOf(item.path)) },
+                onCopyClick = { viewModel.startPasteMode(FolderPickerAction.COPY, setOf(item.path)) }
             )
         }
     }

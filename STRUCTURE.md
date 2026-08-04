@@ -45,7 +45,8 @@ Este documento describe la organización jerárquica de archivos y carpetas del 
 │           │   │   │   ├── FileManagerTopBar.kt   # Barra superior con búsqueda, ordenación y cambio de vista
 │           │   │   │   ├── FileItemCard.kt        # Vista en Cuadrícula (Grid Card)
 │           │   │   │   ├── FileItemRow.kt         # Vista en Lista
-│           │   │   │   ├── FolderPickerDialog.kt   # Diálogo selector de destino para mover o copiar elementos
+│           │   │   │   ├── FolderPickerDialog.kt   # Diálogo selector de destino legacy
+│           │   │   │   ├── PasteBottomBar.kt       # Barra inferior estilo ZArchiver para navegación real de pegado
 │           │   │   │   ├── PemViewerDialog.kt     # Visor Nativo de Claves y Certificados PEM
 │           │   │   │   ├── SettingsSheet.kt       # Hoja de configuración de temas y paletas
 │           │   │   │   ├── StorageHeader.kt       # Card de espacio de almacenamiento y filtros

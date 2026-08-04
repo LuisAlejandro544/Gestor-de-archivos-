@@ -49,6 +49,10 @@ data class FileManagerUiState(
     val selectedPaths: Set<String> = emptySet(),
     val showFolderPickerDialog: Boolean = false,
     val folderPickerAction: FolderPickerAction = FolderPickerAction.MOVE,
+    // Real Navigation Clipboard / Paste Mode (ZArchiver style)
+    val isClipboardActive: Boolean = false,
+    val clipboardAction: FolderPickerAction = FolderPickerAction.MOVE,
+    val clipboardPaths: Set<String> = emptySet(),
     // Password Prompt State
     val showPasswordPromptDialog: Boolean = false,
     val passwordPromptItem: FileItem? = null,

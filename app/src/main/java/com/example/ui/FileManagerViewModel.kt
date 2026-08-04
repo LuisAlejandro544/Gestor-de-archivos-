@@ -303,10 +303,89 @@ class FileManagerViewModel(application: Application) : AndroidViewModel(applicat
         }
     }
 
-    fun openFolderPicker(action: FolderPickerAction) {
-        _uiState.update { state ->
-            state.copy(showFolderPickerDialog = true, folderPickerAction = action)
+    fun startPasteMode(action: FolderPickerAction, paths: Set<String> = emptySet()) {
+        val targetPaths = if (paths.isNotEmpty()) {
+            paths
+        } else if (_uiState.value.selectedPaths.isNotEmpty()) {
+            _uiState.value.selectedPaths
+        } else if (_uiState.value.selectedItem != null) {
+            setOf(_uiState.value.selectedItem!!.path)
+        } else {
+            emptySet()
         }
+
+        if (targetPaths.isEmpty()) {
+            showMessage("No hay elementos seleccionados para operar")
+            return
+        }
+
+        _uiState.update { state ->
+            state.copy(
+                isClipboardActive = true,
+                clipboardAction = action,
+                clipboardPaths = targetPaths,
+                isMultiSelectMode = false,
+                selectedPaths = emptySet(),
+                selectedItem = null,
+                showFolderPickerDialog = false
+            )
+        }
+
+        val actionLabel = if (action == FolderPickerAction.MOVE) "Mover" else "Copiar"
+        showMessage("Modo $actionLabel activado. Navega a la carpeta de destino y presiona 'Pegar aquí'")
+    }
+
+    fun cancelPasteMode() {
+        _uiState.update { state ->
+            state.copy(
+                isClipboardActive = false,
+                clipboardPaths = emptySet()
+            )
+        }
+        showMessage("Operación cancelada")
+    }
+
+    fun executePaste() {
+        val state = _uiState.value
+        val paths = state.clipboardPaths.toList()
+        val dest = state.currentPath
+        val action = state.clipboardAction
+
+        if (paths.isEmpty()) {
+            cancelPasteMode()
+            return
+        }
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+            val success = if (action == FolderPickerAction.MOVE) {
+                repository.moveItems(paths, dest)
+            } else {
+                repository.copyItems(paths, dest)
+            }
+
+            _uiState.update {
+                it.copy(
+                    isLoading = false,
+                    isClipboardActive = false,
+                    clipboardPaths = emptySet()
+                )
+            }
+
+            if (success) {
+                val actionLabel = if (action == FolderPickerAction.MOVE) "movido(s)" else "copiado(s)"
+                val folderName = if (dest == state.rootPath || dest.endsWith("/")) "Almacenamiento Interno" else File(dest).name
+                showMessage("¡${paths.size} elemento(s) $actionLabel en '$folderName'!")
+                loadDirectory(dest)
+                loadStorageInfo()
+            } else {
+                showMessage("Error al procesar la operación en la carpeta de destino")
+            }
+        }
+    }
+
+    fun openFolderPicker(action: FolderPickerAction) {
+        startPasteMode(action)
     }
 
     fun closeFolderPicker() {
@@ -316,39 +395,11 @@ class FileManagerViewModel(application: Application) : AndroidViewModel(applicat
     }
 
     fun executeBatchMove(destinationPath: String) {
-        val selected = _uiState.value.selectedPaths.toList()
-        if (selected.isEmpty()) return
-        viewModelScope.launch {
-            closeFolderPicker()
-            _uiState.update { it.copy(isLoading = true) }
-            val success = repository.moveItems(selected, destinationPath)
-            if (success) {
-                showMessage("${selected.size} elemento(s) movido(s) con éxito")
-                clearSelection()
-                loadDirectory(_uiState.value.currentPath)
-                loadStorageInfo()
-            } else {
-                showMessage("Error al mover algunos elementos")
-            }
-        }
+        startPasteMode(FolderPickerAction.MOVE)
     }
 
     fun executeBatchCopy(destinationPath: String) {
-        val selected = _uiState.value.selectedPaths.toList()
-        if (selected.isEmpty()) return
-        viewModelScope.launch {
-            closeFolderPicker()
-            _uiState.update { it.copy(isLoading = true) }
-            val success = repository.copyItems(selected, destinationPath)
-            if (success) {
-                showMessage("${selected.size} elemento(s) copiado(s) con éxito")
-                clearSelection()
-                loadDirectory(_uiState.value.currentPath)
-                loadStorageInfo()
-            } else {
-                showMessage("Error al copiar algunos elementos")
-            }
-        }
+        startPasteMode(FolderPickerAction.COPY)
     }
 
     fun executeBatchDelete() {

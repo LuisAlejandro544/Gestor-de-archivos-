@@ -36,7 +36,9 @@ fun FileDetailsBottomSheet(
     onExploreZipClick: () -> Unit = {},
     onPemViewerClick: () -> Unit = {},
     onTextEditorClick: () -> Unit = {},
-    onSelectMultiClick: () -> Unit = {}
+    onSelectMultiClick: () -> Unit = {},
+    onMoveClick: () -> Unit = {},
+    onCopyClick: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val iconInfo = getFileIconAndColor(item.fileType, item.isDirectory, item.extension)
@@ -241,6 +243,42 @@ fun FileDetailsBottomSheet(
 
             Spacer(modifier = Modifier.height(10.dp))
 
+            // Move / Copy Buttons for single item
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                OutlinedButton(
+                    onClick = {
+                        onDismiss()
+                        onMoveClick()
+                    },
+                    modifier = Modifier
+                        .weight(1f)
+                        .testTag("action_single_move")
+                ) {
+                    Icon(Icons.Default.DriveFileMove, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Mover")
+                }
+
+                OutlinedButton(
+                    onClick = {
+                        onDismiss()
+                        onCopyClick()
+                    },
+                    modifier = Modifier
+                        .weight(1f)
+                        .testTag("action_single_copy")
+                ) {
+                    Icon(Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Copiar")
+                }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
             OutlinedButton(
                 onClick = {
                     onDismiss()
@@ -252,7 +290,7 @@ fun FileDetailsBottomSheet(
             ) {
                 Icon(Icons.Default.Checklist, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Seleccionar varios / Mover varios")
+                Text("Seleccionar varios")
             }
 
             Spacer(modifier = Modifier.height(10.dp))
